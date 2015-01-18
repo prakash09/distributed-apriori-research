@@ -65,7 +65,7 @@ def getItemSetTransactionList(data_iterator):
 
 def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
 													   #form is saved in
-						
+
 										  # data_iter
     """
     run the apriori algorithm. data_iter is a record iterator
@@ -88,26 +88,24 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
                                         transactionList,
                                         minSupport,
                                         freqSet,k)
-    oneCSet1=oneCSet
+    oneLFS=set()
+    for x in oneCSet.keys():
+		if(oneCSet[x]>=minSupport):
+			oneLFS.add(x)
     clientsocket= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     clientsocket.connect(('10.0.0.21', 8089))
- 
+
     oneCSet=json.dumps(str(oneCSet))
     clientsocket.sendall(str(oneCSet))
-    #time.sleep(2)
     data=clientsocket.recv(10000)
-    data=json.loads(data)	
-    print data
-   
+    data=json.loads(data)
+    data=eval(data)
+
     clientsocket.close()
-   
-    #print data
-    oneLF=set()
-    for x in oneCSet1.keys():
-    	if(oneCSet1[x]>= minSupport):
-    		oneLF.add(x) #oneLF contains local one frequent item sets
-	#oneCSet contains 1 frequent items with their support 
-    currentLSet = set([ x for x in oneCSet1.keys()])  #currentLSet contains only key values
+    oneGFS=set()
+    for x in data.keys():
+		oneGFS.add(x)
+    currentLSet=set.intersection(oneGFS, oneLFS)
     k = 2
     while(currentLSet != set([])):
         largeSet[k-1] = currentLSet
@@ -116,7 +114,24 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
                                                 transactionList,
                                                 minSupport,
                                                 freqSet,k)
+        clientsocket= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        clientsocket.connect(('10.0.0.21', 8089))
+
+        oneCSet=json.dumps(str(currentCSet))
+        clientsocket.sendall(str(oneCSet))
+            #time.sleep(2)
+        data=clientsocket.recv(10000)
+        data=json.loads(data)
+        data=eval(data)
+
+        clientsocket.close()
+        k_GFS=set()
+        for x in data.keys():
+        	k_GFS.add(x)
+
+
         currentLSet = set([ x for x in currentCSet.keys()])
+        currentLSet=set.intersection(k_GFS, currentLSet)
         k = k + 1
 
     def getSupport(item):

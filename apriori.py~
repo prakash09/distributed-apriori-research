@@ -97,17 +97,20 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
     #time.sleep(2)
     data=clientsocket.recv(10000)
     data=json.loads(data)	
-    print data
+    data=eval(data)
    
     clientsocket.close()
-   
-    #print data
+    oneGFS=set()
+    for x in data.keys():
+		oneGFS.add(x)
+
     oneLF=set()
     for x in oneCSet1.keys():
     	if(oneCSet1[x]>= minSupport):
     		oneLF.add(x) #oneLF contains local one frequent item sets
 	#oneCSet contains 1 frequent items with their support 
-    currentLSet = set([ x for x in oneCSet1.keys()])  #currentLSet contains only key values
+	currentLSet=set.intersection(oneGFS, oneLF)
+    #currentLSet = set([ x for x in oneCSet1.keys()])  #currentLSet contains only key values
     k = 2
     while(currentLSet != set([])):
         largeSet[k-1] = currentLSet
