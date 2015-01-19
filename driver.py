@@ -9,6 +9,8 @@ udpsock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 udpsock.bind(('10.0.0.21',8090))
 def udpreceive():
         data, address = udpsock.recvfrom(4096)
+        data=json.loads(data)
+        data=eval(data)
         return data
 def computation(node1, obj1, node2, obj2):
         serverdict={}
@@ -24,12 +26,12 @@ def computation(node1, obj1, node2, obj2):
 
         stardict1={}
         stardict2={}
-        
+        temp={} 
         for x in allkeys:
            
-                temp=(node1[x] + node2[x])/2
-                if (temp > 0.05):
-                        serverdict[x]=temp
+                temp[x]=(node1[x] + node2[x])/2
+                if (temp[x] > 0.05):
+                        serverdict[x]=temp[x]
 
                 elif(node1[x]==0 and length!=1):
                     stardict1[x]=0
@@ -43,6 +45,15 @@ def computation(node1, obj1, node2, obj2):
             print "data from prakash", data_from_client1
             data_from_client2=udpreceive()
             print "data from lalit sir", data_from_client2
+            for x in data_from_client1.keys():
+                temp[x]=temp[x]+(data_from_client1[x])/2
+                if temp[x] > 0.05:
+                        serverdict[x]=temp[x]
+            for x in data_from_client2.keys():
+                temp[x]=temp[x]+(data_from_client2[x])/2
+                if temp[x] > 0.05:
+                        serverdict[x]=temp[x]
+
         #udpsock.sendto(str("hello world"), ('10.0.0.22',5850))
         tcpsend(obj1, serverdict)
         tcpsend(obj2, serverdict)

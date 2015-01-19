@@ -14,7 +14,7 @@ from itertools import chain, combinations
 from collections import defaultdict
 from optparse import OptionParser
 import time
-def starResove(x, largeSet):
+def starResove(x, largeSet,k):
 	print " I am inside star resolve"
 	subset= set(combinations(x,k-1))
 	temp=1
@@ -136,15 +136,18 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
         clients.sendall(str(oneCSet))
             #time.sleep(2)
         data=clients.recv(10000)
-        data=json.loads(data)
-        data=eval(data)
-        print data
-        #clients.close()
-        for x in data.keys():
-			if x in currentCSet:
-				data[x]=currentCSet[x]
-			else:
-				data[x]=starResove(x,largeSet,k)
+        if data:
+
+                data=json.loads(data)
+                data=eval(data)
+                print data
+                #clients.close()
+                for x in data.keys():
+                        if x in currentCSet:
+                                data[x]=currentCSet[x]
+                                        
+                        else:
+                                data[x]=starResove(x,largeSet,k)
 	#we need to resolve star in between these two lines
         clientsocket= socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         data=json.dumps(str(data))
@@ -152,8 +155,9 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
         #clientsocket= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         #clientsocket.connect(('10.0.0.21', 8089))
         data=clients.recv(10000)
-        data=json.loads(data)
-        data=eval(data)
+        if data:
+                data=json.loads(data)
+                data=eval(data)
 
         clients.close()
         k_GFS=set()
