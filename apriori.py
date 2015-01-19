@@ -14,6 +14,19 @@ from itertools import chain, combinations
 from collections import defaultdict
 from optparse import OptionParser
 import time
+def starResove(x, largeSet):
+	print " I am inside star resolve"
+	subset= set(combinations(x,k-1))
+	temp=1
+	count=0
+	for y in subset:
+		if (y in largeSet[k-1]):
+			if largeSet[k-1][y]< temp:
+				temp=largeSet[k-1][y]
+			count=count+1
+	#if count<2 :
+	return temp
+
 
 def subsets(arr):
     print "I am inside subsets"
@@ -36,12 +49,8 @@ def returnItemsWithMinSupport(itemSet, transactionList, minSupport, freqSet,k):
 
         for item, count in localSet.items():
                 support = float(count)/len(transactionList)
-		if k==1 :
-			_itemSet[item]=support
-		else:
-                	if support >= minSupport:
-                        	_itemSet[item]=support
 
+		_itemSet[item]=support
         return _itemSet
 
 
@@ -88,6 +97,7 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
                                         transactionList,
                                         minSupport,
                                         freqSet,k)
+    largeSet[k] = oneCSet
     oneLFS=set()
     for x in oneCSet.keys():
 		if(oneCSet[x]>=minSupport):
@@ -108,31 +118,52 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
     currentLSet=set.intersection(oneGFS, oneLFS)
     k = 2
     while(currentLSet != set([])):
-        largeSet[k-1] = currentLSet
+
         currentLSet = joinSet(currentLSet, k)
         currentCSet = returnItemsWithMinSupport(currentLSet,
                                                 transactionList,
                                                 minSupport,
                                                 freqSet,k)
-        clientsocket= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        clientsocket.connect(('10.0.0.21', 8089))
+        k_LFS={}
+        for x in currentCSet.keys():
+		if(currentCSet[x]>=minSupport):
+			k_LFS[x]=currentCSet[x]
 
-        oneCSet=json.dumps(str(currentCSet))
-        clientsocket.sendall(str(oneCSet))
+        clients= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        clients.connect(('10.0.0.21', 8089))
+
+        oneCSet=json.dumps(str(k_LFS))
+        clients.sendall(str(oneCSet))
             #time.sleep(2)
-        data=clientsocket.recv(10000)
+        data=clients.recv(10000)
+        data=json.loads(data)
+        data=eval(data)
+        print data
+        #clients.close()
+        for x in data.keys():
+			if x in currentCSet:
+				data[x]=currentCSet[x]
+			else:
+				data[x]=starResove(x,largeSet,k)
+	#we need to resolve star in between these two lines
+        clientsocket= socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        data=json.dumps(str(data))
+        clientsocket.sendto(str(data),('10.0.0.21',8090))
+        #clientsocket= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        #clientsocket.connect(('10.0.0.21', 8089))
+        data=clients.recv(10000)
         data=json.loads(data)
         data=eval(data)
 
-        clientsocket.close()
+        clients.close()
         k_GFS=set()
         for x in data.keys():
         	k_GFS.add(x)
 
-
-        currentLSet = set([ x for x in currentCSet.keys()])
+        currentLSet = set([ x for x in k_LFS.keys()])
         currentLSet=set.intersection(k_GFS, currentLSet)
         k = k + 1
+        largeSet[k] = currentCSet
 
     def getSupport(item):
     	    print "I am inside getSupport function"
