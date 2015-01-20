@@ -6,6 +6,7 @@ Usage:
 
     $python apriori.py -f DATASET.csv -s 0.15 -c 0.6
 """
+import struct
 import socket
 import json
 import sys
@@ -23,8 +24,29 @@ def starResove(x, largeSet, k):
 			if largeSet[k-1][y]< temp:
 				temp=largeSet[k-1][y]
 	return temp
+def send_msg(sock, msg):
+    # Prefix each message with a 4-byte length (network byte order)
+    msg = struct.pack('>I', len(msg)) + msg
+    sock.sendall(msg)
 
+def recv_msg(sock):
+    # Read message length and unpack it into an integer
+    raw_msglen = recvall(sock, 4)
+    if not raw_msglen:
+        return None
+    msglen = struct.unpack('>I', raw_msglen)[0]
+    # Read the message data
+    return recvall(sock, msglen)
 
+def recvall(sock, n):
+    # Helper function to recv n bytes or return None if EOF is hit
+    data = ''
+    while len(data) < n:
+        packet = sock.recv(n - len(data))
+        if not packet:
+            return None
+        data += packet
+    return data
 def subsets(arr):
     print "I am inside subsets"
     """ Returns non empty subsets of arr"""
@@ -101,8 +123,10 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
     clientsocket= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     clientsocket.connect(('10.0.0.21', 8089))
     oneCSet=json.dumps(str(oneCSet))
-    clientsocket.sendall(str(oneCSet))
-    data=clientsocket.recv(4096)
+    send_msg(clientsocket, oneCSet)
+    #clientsocket.sendall(str(oneCSet))
+    data=recv_msg(clientsocket)
+    #data=clientsocket.recv(4096)
     if data:
     	data=json.loads(data)
     	data=eval(data)
@@ -118,21 +142,24 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
 
         currentLSet = joinSet(currentLSet, k)
         currentCSet = returnItemsWithMinSupport(currentLSet,transactionList,minSupport,freqSet,k)
-	prescan=returnItemsWithMinSupport(PreScan,transactionList,minSupport,freqSet,k)#
+        prescan=returnItemsWithMinSupport(PreScan,transactionList,minSupport,freqSet,k)#
         k_LFS={}
+
         print prescan
+        PreScan=currentLSet
         for x in currentCSet.keys():
-       		PreScan.add(x)
-		if(currentCSet[x]>=minSupport):
-			k_LFS[x]=currentCSet[x]
+            if(currentCSet[x]>=minSupport):
+                k_LFS[x]=currentCSet[x]
 	# add prescan with k_LFS to send it to server
-	k_LFS=dict(k_LFS.items()+prescan.items())#
+	    k_LFS=dict(k_LFS.items()+prescan.items())#
         clients= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         clients.connect(('10.0.0.21', 8089))
-	oneCSet=json.dumps(str(k_LFS))
-        clients.sendall(str(oneCSet))
+        oneCSet=json.dumps(str(k_LFS))
+        send_msg(clients, oneCSet)
+        #clients.sendall(str(oneCSet))
             #time.sleep(2)
-        data=clients.recv(4096)
+        data=recv_msg(clients)
+        #data=clients.recv(4096)
     	if data:
     		data=json.loads(data)
 	    	data=eval(data)
@@ -147,7 +174,8 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
         clientsocket= socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         data=json.dumps(str(data))
         clientsocket.sendto(str(data),('10.0.0.21',8090))
-        data=clients.recv(4096)
+        data=recv_msg(clients)
+        #data=clients.recv(4096)
 	if data:
     		data=json.loads(data)
     		data=eval(data)

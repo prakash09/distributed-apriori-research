@@ -1,10 +1,34 @@
 import subprocess
+import struct
 from threading import Thread
 import json
 import socket
 import os
 import time
 from collections import defaultdict
+def send_msg(sock, msg):
+    # Prefix each message with a 4-byte length (network byte order)
+    msg = struct.pack('>I', len(msg)) + msg
+    sock.sendall(msg)
+
+def recv_msg(sock):
+    # Read message length and unpack it into an integer
+    raw_msglen = recvall(sock, 4)
+    if not raw_msglen:
+        return None
+    msglen = struct.unpack('>I', raw_msglen)[0]
+    # Read the message data
+    return recvall(sock, msglen)
+
+def recvall(sock, n):
+    # Helper function to recv n bytes or return None if EOF is hit
+    data = ''
+    while len(data) < n:
+        packet = sock.recv(n - len(data))
+        if not packet:
+            return None
+        data += packet
+    return data
 class AutoVivification(dict):
     """Implementation of perl's autovivification feature."""
     def __getitem__(self, item):
@@ -30,7 +54,7 @@ def computation(node1, obj1, node2, obj2,connection_no):
             allkeys.append(x)
         for x in node2.keys():
            allkeys.append(x)
-        length=len(allkeys[1])
+        length=len(allkeys[0])
         allkeys=set(allkeys)
 
         stardict1={}
@@ -46,8 +70,12 @@ def computation(node1, obj1, node2, obj2,connection_no):
                     stardict2[x]=0
 
         if(length!=1):
-            tcpsend(obj1,stardict1)
-            tcpsend(obj2, stardict2)
+            stardict1=json.dumps(str(stardict1))
+            send_msg(obj1, stardict1)
+            stardict2=json.dumps(str(stardict2))
+            send_msg(obj2, stardict2)
+            #tcpsend(obj1,stardict1)
+            #tcpsend(obj2, stardict2)
             data_from_client1=udpreceive()
             print "data from prakash", data_from_client1
             data_from_client2=udpreceive()
@@ -62,8 +90,13 @@ def computation(node1, obj1, node2, obj2,connection_no):
 		        serverdict[x]=temp[connection_no][x]
 
         #udpsock.sendto(str("hello world"), ('10.0.0.22',5850))
-        tcpsend(obj1, serverdict)
-        tcpsend(obj2, serverdict)
+        serverdict1=json.dumps(str(serverdict))
+
+        send_msg(obj1, serverdict1)
+
+        send_msg(obj2, serverdict1)
+        #tcpsend(obj1, serverdict)
+        #tcpsend(obj2, serverdict)
         #obj1.send(serverfinaldata)
         #obj2.send(serverfinaldata)
 
@@ -71,15 +104,15 @@ def computation(node1, obj1, node2, obj2,connection_no):
         for x in serverdict.keys():
             print "Key:",x,"-->", serverdict[x]
         print len(set(node1))
-        #print len(set(node2))
+        print len(set(node2))
         print len(set(serverdict.keys()))
         #print len(set(node1.keys()) & set(node2.keys()))
-def tcpsend(obj,sdata):
+'''def tcpsend(obj,sdata):
         sdata=json.dumps(str(sdata))
-        print "sending data to",obj 
+        print "sending data to",obj
         obj.sendall(sdata)
         return
-
+'''
 def main():
     os.chdir("/home/prakash/")
     os.system("pwd")
@@ -93,7 +126,7 @@ temp=AutoVivification()
 def socketconnection():
     connection_no=0
     try:
-       
+
         serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         serversocket.bind(('10.0.0.21', 8089))
         serversocket.listen(20) # become a server socket, maximum 5 connections
@@ -102,9 +135,10 @@ def socketconnection():
     count=0
     while 1:
         connection, address = serversocket.accept()
-        buf1 = connection.recv(4096)
+        buf1=recv_msg(connection)
+        #buf1 = connection.recv(4096)
         print "after RECEIVE"
-        
+
 
         if len(buf1) > 0:
                 data_loaded = json.loads(buf1)
