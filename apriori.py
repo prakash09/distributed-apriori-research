@@ -14,17 +14,14 @@ from itertools import chain, combinations
 from collections import defaultdict
 from optparse import OptionParser
 import time
-def starResove(x, largeSet,k):
+def starResove(x, largeSet, k):
 	print " I am inside star resolve"
 	subset= set(combinations(x,k-1))
 	temp=1
-	count=0
 	for y in subset:
 		if (y in largeSet[k-1]):
 			if largeSet[k-1][y]< temp:
 				temp=largeSet[k-1][y]
-			count=count+1
-	#if count<2 :
 	return temp
 
 
@@ -49,7 +46,6 @@ def returnItemsWithMinSupport(itemSet, transactionList, minSupport, freqSet,k):
 
         for item, count in localSet.items():
                 support = float(count)/len(transactionList)
-
 		_itemSet[item]=support
         return _itemSet
 
@@ -104,66 +100,66 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
 			oneLFS.add(x)
     clientsocket= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     clientsocket.connect(('10.0.0.21', 8089))
-
     oneCSet=json.dumps(str(oneCSet))
     clientsocket.sendall(str(oneCSet))
-    data=clientsocket.recv(10000)
-    data=json.loads(data)
-    data=eval(data)
-
+    data=clientsocket.recv(4096)
+    if data:
+    	data=json.loads(data)
+    	data=eval(data)
+    	print data
     clientsocket.close()
     oneGFS=set()
     for x in data.keys():
 		oneGFS.add(x)
     currentLSet=set.intersection(oneGFS, oneLFS)
     k = 2
+    PreScan=set()#
     while(currentLSet != set([])):
 
         currentLSet = joinSet(currentLSet, k)
-        currentCSet = returnItemsWithMinSupport(currentLSet,
-                                                transactionList,
-                                                minSupport,
-                                                freqSet,k)
+        currentCSet = returnItemsWithMinSupport(currentLSet,transactionList,minSupport,freqSet,k)
+	prescan=returnItemsWithMinSupport(PreScan,transactionList,minSupport,freqSet,k)#
         k_LFS={}
+        print prescan
         for x in currentCSet.keys():
+       		PreScan.add(x)
 		if(currentCSet[x]>=minSupport):
 			k_LFS[x]=currentCSet[x]
-
+	# add prescan with k_LFS to send it to server
+	k_LFS=dict(k_LFS.items()+prescan.items())#
         clients= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         clients.connect(('10.0.0.21', 8089))
-
-        oneCSet=json.dumps(str(k_LFS))
+	oneCSet=json.dumps(str(k_LFS))
         clients.sendall(str(oneCSet))
             #time.sleep(2)
-        data=clients.recv(10000)
-        if data:
-
-                data=json.loads(data)
-                data=eval(data)
-                print data
-                #clients.close()
-                for x in data.keys():
-                        if x in currentCSet:
-                                data[x]=currentCSet[x]
-                                        
-                        else:
-                                data[x]=starResove(x,largeSet,k)
+        data=clients.recv(4096)
+    	if data:
+    		data=json.loads(data)
+	    	data=eval(data)
+	    	print data
+        #clients.close()
+	for x in data.keys():
+		if x in currentCSet:
+			data[x]=currentCSet[x]
+		else:
+			data[x]=starResove(x,largeSet,k)
 	#we need to resolve star in between these two lines
         clientsocket= socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         data=json.dumps(str(data))
         clientsocket.sendto(str(data),('10.0.0.21',8090))
-        #clientsocket= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        #clientsocket.connect(('10.0.0.21', 8089))
-        data=clients.recv(10000)
-        if data:
-                data=json.loads(data)
-                data=eval(data)
-
+        data=clients.recv(4096)
+	if data:
+    		data=json.loads(data)
+    		data=eval(data)
+    		print data
         clients.close()
         k_GFS=set()
         for x in data.keys():
         	k_GFS.add(x)
-
+	PreScan= k_GFS.difference(PreScan) #
+	print "lalit"
+	print PreScan
+	print "Goyal"
         currentLSet = set([ x for x in k_LFS.keys()])
         currentLSet=set.intersection(k_GFS, currentLSet)
         k = k + 1
