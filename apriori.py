@@ -10,20 +10,21 @@ import struct
 import socket
 import json
 import sys
-#import pdb
+import pdb
 from itertools import chain, combinations
 from collections import defaultdict
 from optparse import OptionParser
 import time
 def starResove(x, largeSet, k):
-	print " I am inside star resolve"
-	subset= set(combinations(x,k-1))
-	temp=1
-	for y in subset:
-		if (y in largeSet[k-1]):
+    print " I am inside star resolve"
+    subset= set(combinations(x,k-1))
+    temp=1
+    pdb.set_trace()
+    for y in subset:
+        if (y in largeSet[k-1]):
 			if largeSet[k-1][y]< temp:
 				temp=largeSet[k-1][y]
-	return temp
+    return temp
 def send_msg(sock, msg):
     # Prefix each message with a 4-byte length (network byte order)
     msg = struct.pack('>I', len(msg)) + msg
@@ -89,7 +90,7 @@ def getItemSetTransactionList(data_iterator):
             itemSet.add(frozenset([item]))              # Generate 1-itemSets
     return itemSet, transactionList
 
-
+largeSet = dict()
 def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
 													   #form is saved in
 
@@ -104,7 +105,7 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
     itemSet, transactionList = getItemSetTransactionList(data_iter)
 
     freqSet = defaultdict(int)
-    largeSet = dict()
+
     # Global dictionary which stores (key=n-itemSets,value=support)
     # which satisfy minSupport
 
@@ -124,9 +125,9 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
     clientsocket.connect(('10.0.0.21', 8089))
     oneCSet=json.dumps(str(oneCSet))
     send_msg(clientsocket, oneCSet)
-    #clientsocket.sendall(str(oneCSet))
+
     data=recv_msg(clientsocket)
-    #data=clientsocket.recv(4096)
+
     if data:
     	data=json.loads(data)
     	data=eval(data)
@@ -138,7 +139,7 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
     currentLSet=set.intersection(oneGFS, oneLFS)
     k = 2
     PreScan=set()#
-    while(currentLSet != set([])):
+    while True:
 
         currentLSet = joinSet(currentLSet, k)
         currentCSet = returnItemsWithMinSupport(currentLSet,transactionList,minSupport,freqSet,k)
@@ -156,27 +157,26 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
         clients.connect(('10.0.0.21', 8089))
         oneCSet=json.dumps(str(k_LFS))
         send_msg(clients, oneCSet)
-        #clients.sendall(str(oneCSet))
-            #time.sleep(2)
+
         data=recv_msg(clients)
-        #data=clients.recv(4096)
+
     	if data:
     		data=json.loads(data)
 	    	data=eval(data)
 	    	print data
-        #clients.close()
-	for x in data.keys():
-		if x in currentCSet:
-			data[x]=currentCSet[x]
-		else:
-			data[x]=starResove(x,largeSet,k)
+
+        for x in data.keys():
+		          if x in currentCSet:
+			                   data[x]=currentCSet[x]
+		          else:
+			                   data[x]=starResove(x,largeSet,k)
 	#we need to resolve star in between these two lines
         clientsocket= socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         data=json.dumps(str(data))
         clientsocket.sendto(str(data),('10.0.0.21',8090))
         data=recv_msg(clients)
         #data=clients.recv(4096)
-	if data:
+        if data:
     		data=json.loads(data)
     		data=eval(data)
     		print data
@@ -184,14 +184,17 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
         k_GFS=set()
         for x in data.keys():
         	k_GFS.add(x)
-	PreScan= k_GFS.difference(PreScan) #
-	print "lalit"
-	print PreScan
-	print "Goyal"
+        PreScan= k_GFS.difference(PreScan) #
+        print "lalit"
+        print PreScan
+        print "Goyal"
         currentLSet = set([ x for x in k_LFS.keys()])
         currentLSet=set.intersection(k_GFS, currentLSet)
-        k = k + 1
+
         largeSet[k] = currentCSet
+        k = k + 1
+        if(not currentLSet and not PreScan):
+            break
 
     def getSupport(item):
     	    print "I am inside getSupport function"

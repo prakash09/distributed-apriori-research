@@ -54,7 +54,10 @@ def computation(node1, obj1, node2, obj2,connection_no):
             allkeys.append(x)
         for x in node2.keys():
            allkeys.append(x)
-        length=len(allkeys[0])
+        if allkeys:
+            length=len(allkeys[0])
+        else:
+            length=0
         allkeys=set(allkeys)
 
         stardict1={}
