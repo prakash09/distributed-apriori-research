@@ -63,6 +63,7 @@ def computation(node1, obj1, node2, obj2,connection_no):
         print "length of all keys", len(allkeys)
         stardict1={}
         stardict2={}
+        infrequent=[]
         for x in allkeys:
             if(len(x)==connection_no):
                 temp[connection_no][x]=(node1[x] + node2[x])/2
@@ -77,6 +78,25 @@ def computation(node1, obj1, node2, obj2,connection_no):
                 temp[connection_no-1][x]=temp[connection_no-1][x]+(node1[x] +node1[x])/2
                 if (temp[connection_no-1][x]<0.05):
                     del global_server_dictionary[connection_no-1][x]
+                    infrequent.append(x)
+        for x in infrequent:
+            x=set(x)
+
+            for y in serverdict.keys():
+                if (set.intersection(x, y)==x):
+                    del serverdict[y]
+        for x in infrequent:
+            x=set(x)
+
+            for y in stardict1.keys():
+                if (set.intersection(x, y)==x):
+                    del stardict1[y]
+        for x in infrequent:
+            x=set(x)
+
+            for y in stardict2.keys():
+                if (set.intersection(x, y)==x):
+                    del stardict2[y]
 
 
 
