@@ -45,6 +45,7 @@ def udpreceive():
         print "udp is receiving data from", address[0]
         data=eval(data)
         return data
+global_server_dictionary=dict()
 def computation(node1, obj1, node2, obj2,connection_no):
         serverdict={}
         node1=defaultdict(lambda: 0, node1)
@@ -63,6 +64,7 @@ def computation(node1, obj1, node2, obj2,connection_no):
         stardict1={}
         stardict2={}
         for x in allkeys:
+            if(len(x)==connection_no):
                 temp[connection_no][x]=(node1[x] + node2[x])/2
                 if (temp[connection_no][x] > 0.05):
                         serverdict[x]=temp[connection_no][x]
@@ -71,6 +73,12 @@ def computation(node1, obj1, node2, obj2,connection_no):
                     stardict1[x]=0
                 elif(node2[x]==0 and length!=1):
                     stardict2[x]=0
+            else:
+                temp[connection_no-1][x]=temp[connection_no-1][x]+(node1[x] +node1[x])/2
+                if (temp[connection_no-1][x]<0.05):
+                    del global_server_dictionary[connection_no-1][x]
+
+
 
         if(length!=1):
             stardict1=json.dumps(str(stardict1))
@@ -84,15 +92,18 @@ def computation(node1, obj1, node2, obj2,connection_no):
             data_from_client2=udpreceive()
             print "data from lalit sir", data_from_client2
             for x in data_from_client1.keys():
-                temp[connection_no][x]=temp[connection_no][x]+(data_from_client1[x])/2
-                if temp[connection_no][x] > 0.05:
-                        serverdict[x]=temp[connection_no][x]
+                temp2=temp[connection_no][x]+(data_from_client1[x])/2
+                if temp2 > 0.05:
+                        serverdict[x]=temp2
             for x in data_from_client2.keys():
-                temp[connection_no][x]=temp[connection_no][x]+(data_from_client2[x])/2
-		if(temp[connection_no][x] > 0.05):
-		        serverdict[x]=temp[connection_no][x]
+                temp2=temp[connection_no][x]+(data_from_client2[x])/2
+                if(temp2 > 0.05):
+                    serverdict[x]=temp2
 
         #udpsock.sendto(str("hello world"), ('10.0.0.22',5850))
+        global_server_dictionary[connection_no]=serverdict
+        print "global dictionary when connection number is ", connection_no
+        print global_server_dictionary
         serverdict1=json.dumps(str(serverdict))
 
         send_msg(obj1, serverdict1)
