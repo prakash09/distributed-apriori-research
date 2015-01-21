@@ -59,7 +59,7 @@ def computation(node1, obj1, node2, obj2,connection_no):
         else:
             length=0
         allkeys=set(allkeys)
-
+        print "length of all keys", len(allkeys)
         stardict1={}
         stardict2={}
         for x in allkeys:
@@ -151,6 +151,7 @@ def socketconnection():
                         obj1=connection
                         node1=eval(node1)
                         print "I am object", node1
+                        print len(node1)
                         #for x in node1.keys():
                         #   print "Key:", x, "-->", node1[x]
                 if address[0]=='10.0.0.22':
@@ -158,7 +159,9 @@ def socketconnection():
                         node2=data_loaded
                         obj2=connection
                         node2= eval(node2)
+
                         print "I am object2", node2
+                        print len(node2)
                 #print data_loaded
             # data_loaded=list(data_loaded)
                         #for x in node2.keys():

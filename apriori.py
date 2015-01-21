@@ -15,16 +15,22 @@ from itertools import chain, combinations
 from collections import defaultdict
 from optparse import OptionParser
 import time
+largeSet = dict()
 def starResove(x, largeSet, k):
-    print " I am inside star resolve"
-    subset= set(combinations(x,k-1))
-    temp=1
-    pdb.set_trace()
-    for y in subset:
-        if (y in largeSet[k-1]):
+	print " I am inside star resolve"
+	subset= set(combinations(x,k-1))
+    	#pdb.set_trace()
+	temp=1
+	for y in subset:
+        	y=frozenset(list(y))
+		if (y in largeSet[k-1]):
 			if largeSet[k-1][y]< temp:
 				temp=largeSet[k-1][y]
-    return temp
+
+	if( temp==1):
+        	return 0
+    	else:
+        	return temp
 def send_msg(sock, msg):
     # Prefix each message with a 4-byte length (network byte order)
     msg = struct.pack('>I', len(msg)) + msg
@@ -49,13 +55,13 @@ def recvall(sock, n):
         data += packet
     return data
 def subsets(arr):
-    print "I am inside subsets"
+    #print "I am inside subsets"
     """ Returns non empty subsets of arr"""
     return chain(*[combinations(arr, i + 1) for i, a in enumerate(arr)])
 
 
 def returnItemsWithMinSupport(itemSet, transactionList, minSupport, freqSet,k):
-	print "I am inside returnItemsWithMinSupport"
+	#print "I am inside returnItemsWithMinSupport"
         """calculates the support for items in the itemSet and returns a subset
        of the itemSet each of whose elements satisfies the minimum support"""
         _itemSet = {}
@@ -74,13 +80,13 @@ def returnItemsWithMinSupport(itemSet, transactionList, minSupport, freqSet,k):
 
 
 def joinSet(itemSet, length):
-	print "I am inside joinSet"
+	#print "I am inside joinSet"
         """Join a set with itself and returns the n-element itemsets"""
         return set([i.union(j) for i in itemSet for j in itemSet if len(i.union(j)) == length])
 
 
 def getItemSetTransactionList(data_iterator):
-    print "I am inside getItemSetTransactionList"
+    #print "I am inside getItemSetTransactionList"
     transactionList = list()
     itemSet = set()
     for record in data_iterator: #yield object data_iterator
@@ -90,7 +96,7 @@ def getItemSetTransactionList(data_iterator):
             itemSet.add(frozenset([item]))              # Generate 1-itemSets
     return itemSet, transactionList
 
-largeSet = dict()
+
 def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
 													   #form is saved in
 
@@ -101,7 +107,7 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
      - items (tuple, support)
      - rules ((pretuple, posttuple), confidence)
     """
-    print "i am inside runApriori"
+    #print "i am inside runApriori"
     itemSet, transactionList = getItemSetTransactionList(data_iter)
 
     freqSet = defaultdict(int)
@@ -109,95 +115,93 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
     # Global dictionary which stores (key=n-itemSets,value=support)
     # which satisfy minSupport
 
-    assocRules = dict()
+    #assocRules = dict()
     # Dictionary which stores Association Rules
     k=1
     oneCSet = returnItemsWithMinSupport(itemSet,
                                         transactionList,
                                         minSupport,
                                         freqSet,k)
-    largeSet[k] = oneCSet
+    largeSet[k] = oneCSet#largeSet is a dictionary of dictionary containing key value pairs
+    print "1-itemset with frequency are=\n",oneCSet,len(oneCSet)
     oneLFS=set()
     for x in oneCSet.keys():
 		if(oneCSet[x]>=minSupport):
-			oneLFS.add(x)
+			oneLFS.add(x)#oneLFS contains local 1-frequent itemsets without support value
+    print "My Local 1-frequent itemsets are=\n",oneLFS,len(oneLFS)
     clientsocket= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     clientsocket.connect(('10.0.0.21', 8089))
     oneCSet=json.dumps(str(oneCSet))
-    send_msg(clientsocket, oneCSet)
-
-    data=recv_msg(clientsocket)
-
+    send_msg(clientsocket, oneCSet)#sending oneCSet i.e. all one itemsets with their support to polling site
+    data=recv_msg(clientsocket)#receiving global 1-frequent itemsets
     if data:
     	data=json.loads(data)
     	data=eval(data)
-    	print data
+    	print "received global 1-frequent itemsets:\n",data,len(data)
     clientsocket.close()
     oneGFS=set()
     for x in data.keys():
-		oneGFS.add(x)
-    currentLSet=set.intersection(oneGFS, oneLFS)
+		oneGFS.add(x)#extracting key of global received data
+    print "length of data received should match with above len\n",len(oneGFS)
+    currentLSet=set.intersection(oneGFS, oneLFS)#intersecting local and global itemsets for joining
+    print "After intersecting local with global received",currentLSet,len(currentLSet)
     k = 2
-    PreScan=set()#
+    PreScan=set()
     while True:
-
-        currentLSet = joinSet(currentLSet, k)
+        currentLSet = joinSet(currentLSet, k)#currentLSet contains joined keys
+        print "joined keys are=\n",currentLSet, len(currentLSet)
         currentCSet = returnItemsWithMinSupport(currentLSet,transactionList,minSupport,freqSet,k)
+        print "k-itemset with frequency are=\n",currentCSet,len(oneCSet)
         prescan=returnItemsWithMinSupport(PreScan,transactionList,minSupport,freqSet,k)#
+	print "Previous itemsets need to be scanned are=\n",prescan,len(prescan)
+        PreScan=currentLSet# new set which need to be differentiate
         k_LFS={}
-
-        print prescan
-        PreScan=currentLSet
         for x in currentCSet.keys():
             if(currentCSet[x]>=minSupport):
                 k_LFS[x]=currentCSet[x]
+        print "My Local k-frequent itemsets are=\n",k_LFS,len(k_LFS)
 	# add prescan with k_LFS to send it to server
-	    k_LFS=dict(k_LFS.items()+prescan.items())#
+	k_LFS=dict(k_LFS.items()+prescan.items())#
         clients= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         clients.connect(('10.0.0.21', 8089))
         oneCSet=json.dumps(str(k_LFS))
         send_msg(clients, oneCSet)
-
         data=recv_msg(clients)
-
-    	if data:
+       	if data:
     		data=json.loads(data)
 	    	data=eval(data)
-	    	print data
-
+	    	print "star itemsets received are=\n",data,len(data)
+        #pdb.set_trace()
         for x in data.keys():
-		          if x in currentCSet:
-			                   data[x]=currentCSet[x]
-		          else:
-			                   data[x]=starResove(x,largeSet,k)
-	#we need to resolve star in between these two lines
-        clientsocket= socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            if x in currentCSet:
+                data[x]=currentCSet[x]
+            else:
+                data[x]=starResove(x,largeSet,k)
+	clientsocket= socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+	print "value of star itemsets received are=\n",data,len(data)
         data=json.dumps(str(data))
         clientsocket.sendto(str(data),('10.0.0.21',8090))
-        data=recv_msg(clients)
-        #data=clients.recv(4096)
-        if data:
+        data=recv_msg(clients)#global data received
+	if data:
     		data=json.loads(data)
     		data=eval(data)
-    		print data
+    		print "received global k-frequent itemsets including star itemsets\n",data,len(data)
         clients.close()
         k_GFS=set()
         for x in data.keys():
         	k_GFS.add(x)
-        PreScan= k_GFS.difference(PreScan) #
-        print "lalit"
-        print PreScan
-        print "Goyal"
+	PreScan= k_GFS.difference(PreScan) #take diffence of received globall set with already scanned data items
+	print "extra needed to scan with k+1 itemsets=\n",PreScan,len(PreScan)
         currentLSet = set([ x for x in k_LFS.keys()])
         currentLSet=set.intersection(k_GFS, currentLSet)
-
+        print "After intersecting local with global received",currentLSet,len(currentLSet)
         largeSet[k] = currentCSet
         k = k + 1
-        if(not currentLSet and not PreScan):
-            break
+        if (not currentLSet and not PreScan):
+        	break
 
     def getSupport(item):
-    	    print "I am inside getSupport function"
+    	    #print "I am inside getSupport function"
             """local function which Returns the support of an item"""
             return float(freqSet[item])/len(transactionList)
 
@@ -221,7 +225,7 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
 
 
 def printResults(items, rules):
-    print "I am inside printResults function"
+    #print "I am inside printResults function"
     """prints the generated itemsets and the confidence rules"""
     for item, support in items:
         print "item: %s , %.3f" % (str(item), support)
@@ -232,7 +236,7 @@ def printResults(items, rules):
 
 
 def dataFromFile(fname):
-	print "I am inside dataFromFile"
+	#print "I am inside dataFromFile"
         """Function which reads from the file and yields a generator"""
         file_iter = open(fname, 'rU')
         for line in file_iter:
