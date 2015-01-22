@@ -6,6 +6,7 @@ import socket
 import os
 import time
 from collections import defaultdict
+import pdb
 def send_msg(sock, msg):
     # Prefix each message with a 4-byte length (network byte order)
     msg = struct.pack('>I', len(msg)) + msg
@@ -78,25 +79,33 @@ def computation(node1, obj1, node2, obj2,connection_no):
                 temp[connection_no-1][x]=temp[connection_no-1][x]+(node1[x] +node1[x])/2
                 if (temp[connection_no-1][x]<0.05):
                     del global_server_dictionary[connection_no-1][x]
+                    print "self deletion", x
                     infrequent.append(x)
-        for x in infrequent:
-            x=set(x)
+        if connection_no>2:
+            pdb.set_trace()
+            for x in infrequent:
+                x=set(x)
 
-            for y in serverdict.keys():
-                if (set.intersection(x, y)==x):
-                    del serverdict[y]
-        for x in infrequent:
-            x=set(x)
+                for y in serverdict.keys():
+                    if (set.intersection(x, y)==x):
+                        print "serverdict", y
+                        del serverdict[y]
+            pdb.set_trace()
+            for x in infrequent:
+                x=set(x)
 
-            for y in stardict1.keys():
-                if (set.intersection(x, y)==x):
-                    del stardict1[y]
-        for x in infrequent:
-            x=set(x)
+                for y in stardict1.keys():
+                    if (set.intersection(x, y)==x):
+                        print "stardict1", y
+                        del stardict1[y]
+            pdb.set_trace()
+            for x in infrequent:
+                x=set(x)
 
-            for y in stardict2.keys():
-                if (set.intersection(x, y)==x):
-                    del stardict2[y]
+                for y in stardict2.keys():
+                    if (set.intersection(x, y)==x):
+                        print "stardict2", y
+                        del stardict2[y]
 
 
 
@@ -108,9 +117,9 @@ def computation(node1, obj1, node2, obj2,connection_no):
             #tcpsend(obj1,stardict1)
             #tcpsend(obj2, stardict2)
             data_from_client1=udpreceive()
-            print "data from prakash", data_from_client1
+            #print "data from prakash", data_from_client1
             data_from_client2=udpreceive()
-            print "data from lalit sir", data_from_client2
+            #print "data from lalit sir", data_from_client2
             for x in data_from_client1.keys():
                 temp2=temp[connection_no][x]+(data_from_client1[x])/2
                 if temp2 > 0.05:
@@ -135,11 +144,11 @@ def computation(node1, obj1, node2, obj2,connection_no):
         #obj2.send(serverfinaldata)
 
 
-        for x in serverdict.keys():
-            print "Key:",x,"-->", serverdict[x]
-        print len(set(node1))
-        print len(set(node2))
-        print len(set(serverdict.keys()))
+        #for x in serverdict.keys():
+            #print "Key:",x,"-->", serverdict[x]
+        #print len(set(node1))
+        #print len(set(node2))
+        #print len(set(serverdict.keys()))
         #print len(set(node1.keys()) & set(node2.keys()))
 '''def tcpsend(obj,sdata):
         sdata=json.dumps(str(sdata))
@@ -181,8 +190,8 @@ def socketconnection():
                         node1=data_loaded
                         obj1=connection
                         node1=eval(node1)
-                        print "I am object", node1
-                        print len(node1)
+                        #print "I am object", node1
+                        #print len(node1)
                         #for x in node1.keys():
                         #   print "Key:", x, "-->", node1[x]
                 if address[0]=='10.0.0.22':
@@ -191,8 +200,8 @@ def socketconnection():
                         obj2=connection
                         node2= eval(node2)
 
-                        print "I am object2", node2
-                        print len(node2)
+                        #print "I am object2", node2
+                        #print len(node2)
                 #print data_loaded
             # data_loaded=list(data_loaded)
                         #for x in node2.keys():
