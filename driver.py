@@ -51,6 +51,7 @@ def computation(node, obj,connection_no):
         n=len(node)
         for i in xrange(n):
                 node[i]=defaultdict(lambda: 0, node[i])
+        for i in xrange(n):
                 for x in node[i].keys():
                         allkeys.append(x)
                 
@@ -65,7 +66,7 @@ def computation(node, obj,connection_no):
         else:
             length=0
         allkeys=set(allkeys)
-        print "length of all keys", len(allkeys)
+        print "length of all keys", len(allkeys),"\n", allkeys
         stardict=[]
         #stardict2={}
         infrequent=[]
@@ -88,24 +89,24 @@ def computation(node, obj,connection_no):
                     stardict1[x]=0
                 elif(node2[x]==0 and length!=1):
                     stardict2[x]=0'''
-           # else:
-                        average=0
-                        for i in xrange(n):
-                            average+=node[i][x]
-                        temp[connection_no-1][x]=temp[connection_no-1][x]+average/n
-                        if (temp[connection_no-1][x]<0.05):
-                            del global_server_dictionary[connection_no-1][x]
-                            print "self deletion", x
-                            infrequent.append(x)
+            else:
+                    average=0
+                    for i in xrange(n):
+                        average+=node[i][x]
+                    temp[connection_no-1][x]=temp[connection_no-1][x]+average/n
+                    if (temp[connection_no-1][x]<0.05):
+                        del global_server_dictionary[connection_no-1][x]
+                        print "self deletion", x
+                        infrequent.append(x)
         if connection_no>2:
-            pdb.set_trace()
+            #pdb.set_trace()
             for x in infrequent:
                 x=set(x)
                 for y in serverdict.keys():
                     if (set.intersection(x, y)==x):
                         print "serverdict", y
                         del serverdict[y]
-            pdb.set_trace()
+            #pdb.set_trace()
             for i in xrange(n):
                 for x in infrequent:
                     x=set(x)
@@ -145,6 +146,7 @@ def computation(node, obj,connection_no):
         print "global dictionary when connection number is ", connection_no
         print global_server_dictionary
         serverdict1=json.dumps(str(serverdict))
+        #pdb.set_trace()
         for i in xrange(n):
                 send_msg(obj[i], serverdict1)
         #send_msg(obj2, serverdict1)
@@ -183,9 +185,11 @@ def socketconnection():
         print "Connection is already open"
     count=0
     total_node=int(raw_input("Enter the total number of computers"))
-    obj=[]
     node=[]
+    obj=[]
+    
     while 1:
+       
         connection, address = serversocket.accept()
         buf1=recv_msg(connection)
         #buf1 = connection.recv(4096)
@@ -196,6 +200,7 @@ def socketconnection():
                 print "data coming from ", address[0]
                 node.append(eval(data_loaded))
                 obj.append(connection)
+                print eval(data_loaded)
                 #node1=eval(node1)
                 #print "I am object", node1
                 #print len(node1)
@@ -215,7 +220,9 @@ def socketconnection():
         count=count+1
         if count==total_node:
                 connection_no=connection_no+1
-                computation(node, obj,connection_no)
+                computation(node[:], obj[:],connection_no)
+                node[:]=[]
+                obj[:]=[]
                 count=0
 if __name__=="__main__":
     t=Thread(target=socketconnection)
