@@ -11,7 +11,6 @@ def send_msg(sock, msg):
     # Prefix each message with a 4-byte length (network byte order)
     msg = struct.pack('>I', len(msg)) + msg
     sock.sendall(msg)
-
 def recv_msg(sock):
     # Read message length and unpack it into an integer
     raw_msglen = recvall(sock, 4)
@@ -20,7 +19,6 @@ def recv_msg(sock):
     msglen = struct.unpack('>I', raw_msglen)[0]
     # Read the message data
     return recvall(sock, msglen)
-
 def recvall(sock, n):
     # Helper function to recv n bytes or return None if EOF is hit
     data = ''
@@ -47,73 +45,87 @@ def udpreceive():
         data=eval(data)
         return data
 global_server_dictionary=dict()
-def computation(node1, obj1, node2, obj2,connection_no):
+def computation(node, obj,connection_no):
         serverdict={}
-        node1=defaultdict(lambda: 0, node1)
-        node2=defaultdict(lambda: 0, node2)
         allkeys=[]
-        for x in node1.keys():
-            allkeys.append(x)
-        for x in node2.keys():
-           allkeys.append(x)
+        n=len(node)
+        for i in xrange(n):
+                node[i]=defaultdict(lambda: 0, node[i])
+                for x in node[i].keys():
+                        allkeys.append(x)
+                
+        #node2=defaultdict(lambda: 0, node2)
+        #allkeys=[]
+        #for x in node1.keys():
+         #   allkeys.append(x)
+        #for x in node2.keys():
+         #  allkeys.append(x)
         if allkeys:
             length=len(allkeys[0])
         else:
             length=0
         allkeys=set(allkeys)
         print "length of all keys", len(allkeys)
-        stardict1={}
-        stardict2={}
+        stardict=[]
+        #stardict2={}
         infrequent=[]
+        for i in xrange(n):
+            stardict.append({})
         for x in allkeys:
+            average=0
             if(len(x)==connection_no):
-                temp[connection_no][x]=(node1[x] + node2[x])/2
+                for i in xrange(n):
+                        average+=node[i][x]
+                temp[connection_no][x]=average/n
                 if (temp[connection_no][x] > 0.05):
                         serverdict[x]=temp[connection_no][x]
-
-                elif(node1[x]==0 and length!=1):
+                else:
+                        for i in xrange(n):
+                            if(node[i][x]==0 and length!=1):
+                                stardict[i][x]=0
+                                
+                ''''elif(node1[x]==0 and length!=1 for ):
                     stardict1[x]=0
                 elif(node2[x]==0 and length!=1):
-                    stardict2[x]=0
-            else:
-                temp[connection_no-1][x]=temp[connection_no-1][x]+(node1[x] +node1[x])/2
-                if (temp[connection_no-1][x]<0.05):
-                    del global_server_dictionary[connection_no-1][x]
-                    print "self deletion", x
-                    infrequent.append(x)
+                    stardict2[x]=0'''
+           # else:
+                        average=0
+                        for i in xrange(n):
+                            average+=node[i][x]
+                        temp[connection_no-1][x]=temp[connection_no-1][x]+average/n
+                        if (temp[connection_no-1][x]<0.05):
+                            del global_server_dictionary[connection_no-1][x]
+                            print "self deletion", x
+                            infrequent.append(x)
         if connection_no>2:
             pdb.set_trace()
             for x in infrequent:
                 x=set(x)
-
                 for y in serverdict.keys():
                     if (set.intersection(x, y)==x):
                         print "serverdict", y
                         del serverdict[y]
             pdb.set_trace()
+            for i in xrange(n):
+                for x in infrequent:
+                    x=set(x)
+                    for y in stardict[i].keys():
+                        if (set.intersection(x, y)==x):
+                            print "stardict1", y
+                            del stardict[i][y]
+        ''' pdb.set_trace()
             for x in infrequent:
                 x=set(x)
-
-                for y in stardict1.keys():
-                    if (set.intersection(x, y)==x):
-                        print "stardict1", y
-                        del stardict1[y]
-            pdb.set_trace()
-            for x in infrequent:
-                x=set(x)
-
                 for y in stardict2.keys():
                     if (set.intersection(x, y)==x):
                         print "stardict2", y
-                        del stardict2[y]
-
-
-
+                        del stardict2[y] '''
         if(length!=1):
-            stardict1=json.dumps(str(stardict1))
-            send_msg(obj1, stardict1)
-            stardict2=json.dumps(str(stardict2))
-            send_msg(obj2, stardict2)
+            for i in xrange(n):
+                stardict[i]=json.dumps(str(stardict[i]))
+                send_msg(obj[i], stardict[i])
+            #stardict2=json.dumps(str(stardict2))
+            #send_msg(obj2, stardict2)
             #tcpsend(obj1,stardict1)
             #tcpsend(obj2, stardict2)
             data_from_client1=udpreceive()
@@ -128,22 +140,18 @@ def computation(node1, obj1, node2, obj2,connection_no):
                 temp2=temp[connection_no][x]+(data_from_client2[x])/2
                 if(temp2 > 0.05):
                     serverdict[x]=temp2
-
         #udpsock.sendto(str("hello world"), ('10.0.0.22',5850))
         global_server_dictionary[connection_no]=serverdict
         print "global dictionary when connection number is ", connection_no
         print global_server_dictionary
         serverdict1=json.dumps(str(serverdict))
-
-        send_msg(obj1, serverdict1)
-
-        send_msg(obj2, serverdict1)
+        for i in xrange(n):
+                send_msg(obj[i], serverdict1)
+        #send_msg(obj2, serverdict1)
         #tcpsend(obj1, serverdict)
         #tcpsend(obj2, serverdict)
         #obj1.send(serverfinaldata)
         #obj2.send(serverfinaldata)
-
-
         #for x in serverdict.keys():
             #print "Key:",x,"-->", serverdict[x]
         #print len(set(node1))
@@ -163,43 +171,41 @@ def main():
     subprocess.call(["cd","/home/prakash","./exe.sh"], shell=True)
     idpass=[ "lalit@10.0.0.22"  ]
     for i in idpass:
-
         subprocess.call(["ssh",i,"./exe.sh"])
 temp=AutoVivification()
 def socketconnection():
     connection_no=0
     try:
-
         serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         serversocket.bind(('10.0.0.21', 8089))
         serversocket.listen(20) # become a server socket, maximum 5 connections
     except:
         print "Connection is already open"
     count=0
+    total_node=int(raw_input("Enter the total number of computers"))
+    obj=[]
+    node=[]
     while 1:
         connection, address = serversocket.accept()
         buf1=recv_msg(connection)
         #buf1 = connection.recv(4096)
         print "after RECEIVE"
-
-
         if len(buf1) > 0:
                 data_loaded = json.loads(buf1)
-                if address[0]=='10.0.0.21':
-                        print "data coming from ", address[0]
-                        node1=data_loaded
-                        obj1=connection
-                        node1=eval(node1)
-                        #print "I am object", node1
-                        #print len(node1)
-                        #for x in node1.keys():
-                        #   print "Key:", x, "-->", node1[x]
-                if address[0]=='10.0.0.22':
-                        print "data coming from ", address[0]
-                        node2=data_loaded
-                        obj2=connection
-                        node2= eval(node2)
-
+                #if address[0]=='10.0.0.21':
+                print "data coming from ", address[0]
+                node.append(eval(data_loaded))
+                obj.append(connection)
+                #node1=eval(node1)
+                #print "I am object", node1
+                #print len(node1)
+                #for x in node1.keys():
+                #   print "Key:", x, "-->", node1[x]
+            #if address[0]=='10.0.0.22':
+             #           print "data coming from ", address[0]
+              #          node2=data_loaded
+              #          obj2=connection
+               #         node2= eval(node2)
                         #print "I am object2", node2
                         #print len(node2)
                 #print data_loaded
@@ -207,11 +213,10 @@ def socketconnection():
                         #for x in node2.keys():
                         #       print "key:",x, "-->",node2[x]
         count=count+1
-        if count==2:
+        if count==total_node:
                 connection_no=connection_no+1
-                computation(node1, obj1, node2, obj2,connection_no)
+                computation(node, obj,connection_no)
                 count=0
-
 if __name__=="__main__":
     t=Thread(target=socketconnection)
     t1=Thread(target=main)
