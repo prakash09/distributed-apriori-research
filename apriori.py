@@ -16,21 +16,10 @@ from collections import defaultdict
 from optparse import OptionParser
 import time
 largeSet = dict()
-def starResove(x, largeSet, k):
-	print " I am inside star resolve"
-	subset= set(combinations(x,k-1))
-    	#pdb.set_trace()
-	temp=1
-	for y in subset:
-        	y=frozenset(list(y))
-		if (y in largeSet[k-1]):
-			if largeSet[k-1][y]< temp:
-				temp=largeSet[k-1][y]
+udpsock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+udpsock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+udpsock.bind(('10.0.0.255',10000))
 
-	if( temp==1):
-        	return 0
-    	else:
-        	return temp
 def send_msg(sock, msg):
     # Prefix each message with a 4-byte length (network byte order)
     msg = struct.pack('>I', len(msg)) + msg
@@ -144,43 +133,43 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
 		oneGFS.add(x)#extracting key of global received data
     print "length of data received should match with above len\n",len(oneGFS)
     currentLSet=set.intersection(oneGFS, oneLFS)#intersecting local and global itemsets for joining
+
+    udpsock.sendto(json.dumps(str(currentLSet)), ('10.0.0.255',10000)) #broadcasting data to all nodes
+    while True:
+        data, address= udpsock.recvfrom(10000)
+        if( address[0]=='10.0.0.21'):
+            continue
+        else:
+            break
+    data=json.loads(data)
+    data=eval(data)
+    print "data from lalit sir", data, len(data)
+
+
     print "After intersecting local with global received",currentLSet,len(currentLSet)
+
     k = 2
-    PreScan=set()
+
     while True:
         currentLSet = joinSet(currentLSet, k)#currentLSet contains joined keys
+        data = joinSet(data, k)
+        currentLSet=currentLSet.union(data)
         print "joined keys are=\n",currentLSet, len(currentLSet)
         currentCSet = returnItemsWithMinSupport(currentLSet,transactionList,minSupport,freqSet,k)
         print "k-itemset with frequency are=\n",currentCSet,len(oneCSet)
-        prescan=returnItemsWithMinSupport(PreScan,transactionList,minSupport,freqSet,k)#
-	print "Previous itemsets need to be scanned are=\n",prescan,len(prescan)
-        PreScan=currentLSet# new set which need to be differentiate
+
+
+
         k_LFS={}
         for x in currentCSet.keys():
             if(currentCSet[x]>=minSupport):
                 k_LFS[x]=currentCSet[x]
         print "My Local k-frequent itemsets are=\n",k_LFS,len(k_LFS)
-	# add prescan with k_LFS to send it to server
-	k_LFS=dict(k_LFS.items()+prescan.items())#
+
         clients= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         clients.connect(('10.0.0.21', 8089))
         oneCSet=json.dumps(str(k_LFS))
         send_msg(clients, oneCSet)
-        data=recv_msg(clients)
-       	if data:
-    		data=json.loads(data)
-	    	data=eval(data)
-	    	print "star itemsets received are=\n",data,len(data)
-        #pdb.set_trace()
-        for x in data.keys():
-            if x in currentCSet:
-                data[x]=currentCSet[x]
-            else:
-                data[x]=starResove(x,largeSet,k)
-	clientsocket= socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-	print "value of star itemsets received are=\n",data,len(data)
-        data=json.dumps(str(data))
-        clientsocket.sendto(str(data),('10.0.0.21',8090))
         data=recv_msg(clients)#global data received
 	if data:
     		data=json.loads(data)
@@ -190,14 +179,23 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
         k_GFS=set()
         for x in data.keys():
         	k_GFS.add(x)
-	PreScan= k_GFS.difference(PreScan) #take diffence of received globall set with already scanned data items
-	print "extra needed to scan with k+1 itemsets=\n",PreScan,len(PreScan)
+
+
         currentLSet = set([ x for x in k_LFS.keys()])
         currentLSet=set.intersection(k_GFS, currentLSet)
         print "After intersecting local with global received",currentLSet,len(currentLSet)
+        udpsock.sendto(json.dumps(str(currentLSet)), ('10.0.0.255',10000)) #broadcasting data to all nodes
+        while True:
+            data, address= udpsock.recvfrom(10000)
+            if( address[0]=='10.0.0.21'):
+                continue
+            else:
+                break
+        data=json.loads(data)
+        data=eval(data)
         largeSet[k] = currentCSet
         k = k + 1
-        if (not currentLSet and not PreScan):
+        if (not currentLSet ):
         	break
 
     def getSupport(item):
@@ -217,7 +215,10 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
             for element in _subsets:
                 remain = item.difference(element)
                 if len(remain) > 0:
-                    confidence = getSupport(item)/getSupport(element)
+                    try:
+                        confidence = getSupport(item)/getSupport(element)
+                    except:
+                        continue
                     if confidence >= minConfidence:
                         toRetRules.append(((tuple(element), tuple(remain)),
                                            confidence))
