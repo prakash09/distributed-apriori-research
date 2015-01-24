@@ -17,7 +17,7 @@ from optparse import OptionParser
 import time
 largeSet = dict()
 def starResove(x, largeSet, k):
-	print " I am inside star resolve"
+	#print " I am inside star resolve"
 	subset= set(combinations(x,k-1))
     	#pdb.set_trace()
 	temp=1
@@ -151,9 +151,9 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
         currentLSet = joinSet(currentLSet, k)#currentLSet contains joined keys
         print "joined keys are=\n",currentLSet, len(currentLSet)
         currentCSet = returnItemsWithMinSupport(currentLSet,transactionList,minSupport,freqSet,k)
-        print "k-itemset with frequency are=\n",currentCSet,len(oneCSet)
+        print "k-itemset with frequency are=\n",currentCSet,len(currentCSet)
         prescan=returnItemsWithMinSupport(PreScan,transactionList,minSupport,freqSet,k)#
-	print "Previous itemsets need to be scanned are=\n",prescan,len(prescan)
+#	print "Previous itemsets need to be scanned are=\n",prescan,len(prescan)
         PreScan=currentLSet# new set which need to be differentiate
         k_LFS={}
         for x in currentCSet.keys():
@@ -170,7 +170,7 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
        	if data:
     		data=json.loads(data)
 	    	data=eval(data)
-	    	print "star itemsets received are=\n",data,len(data)
+	    #	print "star itemsets received are=\n",data,len(data)
         #pdb.set_trace()
         for x in data.keys():
             if x in currentCSet:
@@ -178,7 +178,7 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
             else:
                 data[x]=starResove(x,largeSet,k)
 	clientsocket= socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-	print "value of star itemsets received are=\n",data,len(data)
+#	print "value of star itemsets received are=\n",data,len(data)
         data=json.dumps(str(data))
         clientsocket.sendto(str(data),('10.0.0.21',8090))
         data=recv_msg(clients)#global data received
@@ -191,7 +191,7 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
         for x in data.keys():
         	k_GFS.add(x)
 	PreScan= k_GFS.difference(PreScan) #take diffence of received globall set with already scanned data items
-	print "extra needed to scan with k+1 itemsets=\n",PreScan,len(PreScan)
+#	print "extra needed to scan with k+1 itemsets=\n",PreScan,len(PreScan)
         currentLSet = set([ x for x in k_LFS.keys()])
         currentLSet=set.intersection(k_GFS, currentLSet)
         print "After intersecting local with global received",currentLSet,len(currentLSet)

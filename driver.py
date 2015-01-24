@@ -7,6 +7,7 @@ import os
 import time
 from collections import defaultdict
 import pdb
+import sys
 def send_msg(sock, msg):
     # Prefix each message with a 4-byte length (network byte order)
     msg = struct.pack('>I', len(msg)) + msg
@@ -41,7 +42,7 @@ udpsock.bind(('10.0.0.21',8090))
 def udpreceive():
         data, address = udpsock.recvfrom(4096)
         data=json.loads(data)
-        print "udp is receiving data from", address[0]
+        #print "udp is receiving data from", address[0]
         data=eval(data)
         return data
 global_server_dictionary=dict()
@@ -70,6 +71,7 @@ def computation(node, obj,connection_no):
         stardict=[]
         #stardict2={}
         infrequent=[]
+        data_from_client=[]
         for i in xrange(n):
             stardict.append({})
         for x in allkeys:
@@ -80,9 +82,9 @@ def computation(node, obj,connection_no):
                 temp[connection_no][x]=average/n
                 if (temp[connection_no][x] > 0.05):
                         serverdict[x]=temp[connection_no][x]
-                else:
+                elif(length!=1):
                         for i in xrange(n):
-                            if(node[i][x]==0 and length!=1):
+                            if(node[i][x]==0):
                                 stardict[i][x]=0
                                 
                 ''''elif(node1[x]==0 and length!=1 for ):
@@ -96,7 +98,7 @@ def computation(node, obj,connection_no):
                     temp[connection_no-1][x]=temp[connection_no-1][x]+average/n
                     if (temp[connection_no-1][x]<0.05):
                         del global_server_dictionary[connection_no-1][x]
-                        print "self deletion", x
+                  #      print "self deletion", x
                         infrequent.append(x)
         if connection_no>2:
             #pdb.set_trace()
@@ -104,7 +106,7 @@ def computation(node, obj,connection_no):
                 x=set(x)
                 for y in serverdict.keys():
                     if (set.intersection(x, y)==x):
-                        print "serverdict", y
+                   #     print "serverdict", y
                         del serverdict[y]
             #pdb.set_trace()
             for i in xrange(n):
@@ -112,7 +114,7 @@ def computation(node, obj,connection_no):
                     x=set(x)
                     for y in stardict[i].keys():
                         if (set.intersection(x, y)==x):
-                            print "stardict1", y
+                           # print "stardict", y
                             del stardict[i][y]
         ''' pdb.set_trace()
             for x in infrequent:
@@ -129,18 +131,20 @@ def computation(node, obj,connection_no):
             #send_msg(obj2, stardict2)
             #tcpsend(obj1,stardict1)
             #tcpsend(obj2, stardict2)
-            data_from_client1=udpreceive()
+            for i in xrange(n):
+                data_from_client.append(udpreceive())
             #print "data from prakash", data_from_client1
-            data_from_client2=udpreceive()
+            #data_from_client2=udpreceive()
             #print "data from lalit sir", data_from_client2
-            for x in data_from_client1.keys():
-                temp2=temp[connection_no][x]+(data_from_client1[x])/2
-                if temp2 > 0.05:
-                        serverdict[x]=temp2
-            for x in data_from_client2.keys():
+            for i in xrange(n):
+                for x in data_from_client[i].keys():
+                        temp2=temp[connection_no][x]+(data_from_client[i][x])/2
+                        if temp2 > 0.05:
+                                serverdict[x]=temp2
+            '''for x in data_from_client2.keys():
                 temp2=temp[connection_no][x]+(data_from_client2[x])/2
                 if(temp2 > 0.05):
-                    serverdict[x]=temp2
+                    serverdict[x]=temp2'''
         #udpsock.sendto(str("hello world"), ('10.0.0.22',5850))
         global_server_dictionary[connection_no]=serverdict
         print "global dictionary when connection number is ", connection_no
@@ -149,17 +153,8 @@ def computation(node, obj,connection_no):
         #pdb.set_trace()
         for i in xrange(n):
                 send_msg(obj[i], serverdict1)
-        #send_msg(obj2, serverdict1)
-        #tcpsend(obj1, serverdict)
-        #tcpsend(obj2, serverdict)
-        #obj1.send(serverfinaldata)
-        #obj2.send(serverfinaldata)
-        #for x in serverdict.keys():
-            #print "Key:",x,"-->", serverdict[x]
-        #print len(set(node1))
-        #print len(set(node2))
-        #print len(set(serverdict.keys()))
-        #print len(set(node1.keys()) & set(node2.keys()))
+        return None
+     
 '''def tcpsend(obj,sdata):
         sdata=json.dumps(str(sdata))
         print "sending data to",obj
@@ -174,6 +169,7 @@ def main():
     idpass=[ "lalit@10.0.0.22"  ]
     for i in idpass:
         subprocess.call(["ssh",i,"./exe.sh"])
+    return None
 temp=AutoVivification()
 def socketconnection():
     connection_no=0
@@ -184,7 +180,7 @@ def socketconnection():
     except:
         print "Connection is already open"
     count=0
-    total_node=int(raw_input("Enter the total number of computers"))
+    total_node=2 #int(raw_input("Enter the total number of computers"))
     node=[]
     obj=[]
     
@@ -218,13 +214,25 @@ def socketconnection():
                         #for x in node2.keys():
                         #       print "key:",x, "-->",node2[x]
         count=count+1
+        check=0
         if count==total_node:
+                for i in xrange(count):
+                    if(len(node[i].keys())>0):
+                        check=1
+                
+
                 connection_no=connection_no+1
                 computation(node[:], obj[:],connection_no)
                 node[:]=[]
                 obj[:]=[]
                 count=0
+                if check==0: 
+                    break
+    print "total time in execution =", time.time()-start_time
+    return None
+start_time=0
 if __name__=="__main__":
+    start_time=time.time()
     t=Thread(target=socketconnection)
     t1=Thread(target=main)
     t.start()
