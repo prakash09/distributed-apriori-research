@@ -7,6 +7,14 @@ import os
 import time
 from collections import defaultdict
 import pdb
+def timing(f):
+    def wrap(*args):
+        time1 = time.time()
+        ret = f(*args)
+        time2 = time.time()
+        print '%s function took %0.3f ms' % (f.func_name, (time2-time1)*1000.0)
+        return ret
+    return wrap
 def send_msg(sock, msg):
     msg = struct.pack('>I', len(msg)) + msg
     sock.sendall(msg)
@@ -33,6 +41,7 @@ class AutoVivification(dict):
             value = self[item] = type(self)()
             return value
 global_server_dictionary=dict()
+@timing
 def computation(node, obj,connection_no):
         serverdict={}
         allkeys=[]
@@ -59,6 +68,7 @@ def computation(node, obj,connection_no):
         for i in xrange(n):
                 send_msg(obj[i], serverdict1)
         return None
+@timing
 def main():
     os.chdir("/home/prakash/")
     os.system("pwd")
@@ -68,6 +78,7 @@ def main():
     for i in idpass:
         subprocess.call(["ssh",i,"./exe.sh"])
 temp=AutoVivification()
+@timing
 def socketconnection():
     connection_no=0
     try:
