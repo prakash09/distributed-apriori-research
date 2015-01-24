@@ -15,7 +15,16 @@ from itertools import chain, combinations
 from collections import defaultdict
 from optparse import OptionParser
 import time
+def timing(f):
+    def wrap(*args):
+        time1 = time.time()
+        ret = f(*args)
+        time2 = time.time()
+        print '%s function took %0.3f ms' % (f.func_name, (time2-time1)*1000.0)
+        return ret
+    return wrap
 largeSet = dict()
+@timing
 def starResove(x, largeSet, k):
 	#print " I am inside star resolve"
 	subset= set(combinations(x,k-1))
@@ -59,7 +68,7 @@ def subsets(arr):
     """ Returns non empty subsets of arr"""
     return chain(*[combinations(arr, i + 1) for i, a in enumerate(arr)])
 
-
+@timing
 def returnItemsWithMinSupport(itemSet, transactionList, minSupport, freqSet,k):
 	#print "I am inside returnItemsWithMinSupport"
         """calculates the support for items in the itemSet and returns a subset
@@ -170,15 +179,18 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
        	if data:
     		data=json.loads(data)
 	    	data=eval(data)
-	    #	print "star itemsets received are=\n",data,len(data)
+	    	print "star itemsets received are=",data,len(data)
         #pdb.set_trace()
         for x in data.keys():
-            if x in currentCSet:
-                data[x]=currentCSet[x]
-            else:
-                data[x]=starResove(x,largeSet,k)
+			try:
+				data[x]=currentCSet[x]
+            #if x in currentCSet:
+               # data[x]=currentCSet[x]
+            #else:
+			except KeyError:
+				data[x]=starResove(x,largeSet,k)
 	clientsocket= socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-#	print "value of star itemsets received are=\n",data,len(data)
+	print "value of star itemsets calculated are=",data,len(data)
         data=json.dumps(str(data))
         clientsocket.sendto(str(data),('10.0.0.21',8090))
         data=recv_msg(clients)#global data received

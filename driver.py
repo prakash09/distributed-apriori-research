@@ -6,6 +6,16 @@ import socket
 import os
 import time
 from collections import defaultdict
+def timing(f):
+    def wrap(*args):
+        time1 = time.time()
+        ret = f(*args)
+        time2 = time.time()
+        print '%s function took %0.3f ms' % (f.func_name, (time2-time1)*1000.0)
+        return ret
+    return wrap
+#import profile
+
 #import pdb
 def send_msg(sock, msg):
     msg = struct.pack('>I', len(msg)) + msg
@@ -34,12 +44,16 @@ class AutoVivification(dict):
             return value
 udpsock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 udpsock.bind(('10.0.0.21',8090))
+@timing
 def udpreceive():
         data, address = udpsock.recvfrom(4096)
+        print "udpdata coming from", address[0]
         data=json.loads(data)
         data=eval(data)
+        print "udpdata length=", len(data)
         return data
 global_server_dictionary=dict()
+@timing
 def computation(node, obj,connection_no):
         serverdict={}
         allkeys=[]
@@ -50,12 +64,13 @@ def computation(node, obj,connection_no):
         for i in xrange(n):
                 node[i]=defaultdict(lambda: 0, node[i])
                 stardict.append({})
-        allkeys=[x for x in node[i].keys() ]
+                allkeys=[x for x in node[i].keys() ]
         if allkeys:
             length=len(allkeys[0])
         else:
             length=0
         allkeys=set(allkeys)
+       
         for x in allkeys:
             average=0
             if(len(x)==connection_no):
@@ -77,6 +92,7 @@ def computation(node, obj,connection_no):
                         del global_server_dictionary[connection_no-1][x]
                   #      print "self deletion", x
                         infrequent.append(x)
+       
         if connection_no>2:
             for x in infrequent:
                 x=set(x)
@@ -87,11 +103,12 @@ def computation(node, obj,connection_no):
                     for z in stardict[i].keys():
                         if (set.intersection(x,z)==x):
                             del stardict[i][z]
+      
         if(length!=1):
             for i in xrange(n):
                 stardict[i]=json.dumps(str(stardict[i]))
                 send_msg(obj[i], stardict[i])
-                data_from_client=[udpreceive() for i in xrange(n)]
+            data_from_client=[udpreceive() for i in xrange(n)]
             for i in xrange(n):
                 for x in data_from_client[i].keys():
                         temp2=temp[connection_no][x]+(data_from_client[i][x])/2
@@ -104,6 +121,7 @@ def computation(node, obj,connection_no):
         for i in xrange(n):
                 send_msg(obj[i], serverdict1)
         return None
+@timing
 def main():
     os.chdir("/home/prakash/")
     os.system("pwd")
@@ -113,7 +131,9 @@ def main():
     for i in idpass:
         subprocess.call(["ssh",i,"./exe.sh"])
     return None
+
 temp=AutoVivification()
+@timing
 def socketconnection():
     connection_no=0
     try:
@@ -144,12 +164,14 @@ def socketconnection():
                         check=1
                 connection_no=connection_no+1
                 computation(node[:], obj[:],connection_no)
+               # profile.run('computation')
                 node[:]=[]
                 obj[:]=[]
                 count=0
                 if check==0:
                     break
     print "total time in execution =", time.time()-start_time
+   
     return None
 start_time=0
 if __name__=="__main__":
