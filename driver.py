@@ -75,6 +75,7 @@ def computation(node, obj,connection_no):
 
         for i in xrange(n):
                 send_msg(obj[i], serverdict1)
+        return None
 def main():
     os.chdir("/home/prakash/")
     os.system("pwd")
@@ -93,7 +94,7 @@ def socketconnection():
     except:
         print "Connection is already open"
     count=0
-    total_node=int(raw_input("Enter the total number of computers"))
+    total_node=2 #int(raw_input("Enter the total number of computers"))
     node=[]
     obj=[]
 
@@ -112,13 +113,24 @@ def socketconnection():
                 print eval(data_loaded)
 
         count=count+1
+        check=0
         if count==total_node:
+                for i in xrange(count):
+                    if(len(node[i].keys())>0):
+                        check=1
+
                 connection_no=connection_no+1
                 computation(node[:], obj[:],connection_no)
                 node[:]=[]
                 obj[:]=[]
                 count=0
+                if check==0:
+                    break
+    print "the total runtime=", time.time()-start_time
+    return None
+start_time=0
 if __name__=="__main__":
+    start_time=time.time()
     t=Thread(target=socketconnection)
     t1=Thread(target=main)
     t.start()
