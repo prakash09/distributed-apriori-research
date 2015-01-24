@@ -8,18 +8,15 @@ import time
 from collections import defaultdict
 import pdb
 def send_msg(sock, msg):
-
     msg = struct.pack('>I', len(msg)) + msg
     sock.sendall(msg)
 def recv_msg(sock):
-
     raw_msglen = recvall(sock, 4)
     if not raw_msglen:
         return None
     msglen = struct.unpack('>I', raw_msglen)[0]
     return recvall(sock, msglen)
 def recvall(sock, n):
-
     data = ''
     while len(data) < n:
         packet = sock.recv(n - len(data))
@@ -35,14 +32,6 @@ class AutoVivification(dict):
         except KeyError:
             value = self[item] = type(self)()
             return value
-udpsock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-udpsock.bind(('10.0.0.21',8090))
-'''def udpreceive():
-        data, address = udpsock.recvfrom(4096)
-        data=json.loads(data)
-        print "udp is receiving data from", address[0]
-        data=eval(data)
-        return data'''
 global_server_dictionary=dict()
 def computation(node, obj,connection_no):
         serverdict={}
@@ -53,26 +42,20 @@ def computation(node, obj,connection_no):
         for i in xrange(n):
                 for x in node[i].keys():
                         allkeys.append(x)
-
-
         allkeys=set(allkeys)
         print "length of all keys", len(allkeys),"\n", allkeys
-
-
         for x in allkeys:
             average=0
-            if(len(x)==connection_no):
-                for i in xrange(n):
-                        average+=node[i][x]
-                temp[connection_no][x]=average/n
-                if (temp[connection_no][x] > 0.05):
-                        serverdict[x]=temp[connection_no][x]
-
+           # if(len(x)==connection_no):
+            for i in xrange(n):
+                    average+=node[i][x]
+            temp[connection_no][x]=average/n
+            if (temp[connection_no][x] > 0.05):
+                    serverdict[x]=temp[connection_no][x]
         global_server_dictionary[connection_no]=serverdict
         print "global dictionary when connection number is ", connection_no
         print global_server_dictionary
         serverdict1=json.dumps(str(serverdict))
-
         for i in xrange(n):
                 send_msg(obj[i], serverdict1)
         return None
@@ -97,28 +80,22 @@ def socketconnection():
     total_node=2 #int(raw_input("Enter the total number of computers"))
     node=[]
     obj=[]
-
     while 1:
-
         connection, address = serversocket.accept()
         buf1=recv_msg(connection)
-
         print "after RECEIVE"
         if len(buf1) > 0:
                 data_loaded = json.loads(buf1)
-
                 print "data coming from ", address[0]
                 node.append(eval(data_loaded))
                 obj.append(connection)
                 print eval(data_loaded)
-
         count=count+1
         check=0
         if count==total_node:
                 for i in xrange(count):
                     if(len(node[i].keys())>0):
                         check=1
-
                 connection_no=connection_no+1
                 computation(node[:], obj[:],connection_no)
                 node[:]=[]
