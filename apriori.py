@@ -15,6 +15,7 @@ from itertools import chain, combinations
 from collections import defaultdict
 from optparse import OptionParser
 import time
+udpsocket= socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 def timing(f):
     def wrap(*args):
         time1 = time.time()
@@ -189,10 +190,10 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
             #else:
 			except KeyError:
 				data[x]=starResove(x,largeSet,k)
-	clientsocket= socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+	
 	print "value of star itemsets calculated are=",data,len(data)
         data=json.dumps(str(data))
-        clientsocket.sendto(str(data),('10.0.0.21',8090))
+        udpsocket.sendto(str(data),('10.0.0.21',8090))
         data=recv_msg(clients)#global data received
 	if data:
     		data=json.loads(data)
