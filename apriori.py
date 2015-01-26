@@ -15,7 +15,7 @@ from itertools import chain, combinations
 from collections import defaultdict
 from optparse import OptionParser
 import time
-udpsocket= socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
 def timing(f):
     def wrap(*args):
         time1 = time.time()
@@ -175,14 +175,16 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
         clients= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         clients.connect(('10.0.0.21', 8089))
         oneCSet=json.dumps(str(k_LFS))
+       
         send_msg(clients, oneCSet)
+        
         data=recv_msg(clients)
        	if data:
     		data=json.loads(data)
 	    	data=eval(data)
 	    	print "star itemsets received are=",data,len(data)
         #pdb.set_trace()
-        for x in data.keys():
+                for x in data.keys():
 			try:
 				data[x]=currentCSet[x]
             #if x in currentCSet:
@@ -191,27 +193,39 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
 			except KeyError:
 				data[x]=starResove(x,largeSet,k)
 	
-	print "value of star itemsets calculated are=",data,len(data)
+	        print "value of star itemsets calculated are=",data,len(data)
         data=json.dumps(str(data))
-        udpsocket.sendto(str(data),('10.0.0.21',8090))
+        udpsocket= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        udpsocket.connect(('10.0.0.21',8090))
+        #udpsocket.sendto(str(data),('10.0.0.21',8090))
+        send_msg(udpsocket,data)
+        udpsocket.close()
         data=recv_msg(clients)#global data received
+        k_GFS=set()
 	if data:
     		data=json.loads(data)
     		data=eval(data)
     		print "received global k-frequent itemsets including star itemsets\n",data,len(data)
-        clients.close()
-        k_GFS=set()
-        for x in data.keys():
-        	k_GFS.add(x)
+                clients.close()
+                
+                for x in data.keys():
+        	    k_GFS.add(x)
 	PreScan= k_GFS.difference(PreScan) #take diffence of received globall set with already scanned data items
 #	print "extra needed to scan with k+1 itemsets=\n",PreScan,len(PreScan)
+        if not k_LFS:
+            break
         currentLSet = set([ x for x in k_LFS.keys()])
         currentLSet=set.intersection(k_GFS, currentLSet)
         print "After intersecting local with global received",currentLSet,len(currentLSet)
         largeSet[k] = currentCSet
         k = k + 1
         if (not currentLSet and not PreScan):
-        	break
+            clients= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            clients.connect(('10.0.0.21', 8089))
+            oneCSet=json.dumps(str(currentLSet))
+            send_msg(clients, oneCSet)
+            clients.close()
+            break
 
     def getSupport(item):
     	    #print "I am inside getSupport function"
@@ -230,10 +244,13 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
             for element in _subsets:
                 remain = item.difference(element)
                 if len(remain) > 0:
-                    confidence = getSupport(item)/getSupport(element)
-                    if confidence >= minConfidence:
-                        toRetRules.append(((tuple(element), tuple(remain)),
-                                           confidence))
+                    try:
+                        confidence = getSupport(item)/getSupport(element)
+                        if confidence >= minConfidence:
+                            toRetRules.append(((tuple(element), tuple(remain)),
+                                            confidence))
+                    except:
+                        continue
     return toRetItems, toRetRules
 
 

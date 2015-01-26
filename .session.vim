@@ -93,7 +93,6 @@ set termencoding=utf-8
 set textwidth=79
 set undolevels=700
 set wildignore=*.pyc,*_build/*,*/coverage/*
-set window=37
 let s:so_save = &so | let s:siso_save = &siso | set so=0 siso=0
 let v:this_session=expand("<sfile>:p")
 silent only
@@ -102,9 +101,9 @@ if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
   let s:wipebuf = bufnr('%')
 endif
 set shortmess=aoO
-badd +0 apriori.py
-args apriori.py
-edit apriori.py
+badd +0 driver.py
+args driver.py
+edit driver.py
 set splitbelow splitright
 set nosplitright
 wincmd t
@@ -175,8 +174,8 @@ setlocal formatexpr=
 setlocal formatoptions=tcq
 setlocal formatlistpat=^\\s*\\d\\+[\\]:.)}\\t\ ]\\s*
 setlocal grepprg=
-setlocal iminsert=0
-setlocal imsearch=0
+setlocal iminsert=2
+setlocal imsearch=2
 setlocal include=^\\s*\\(from\\|import\\)
 setlocal includeexpr=substitute(v:fname,'\\.','/','g')
 setlocal indentexpr=
@@ -230,12 +229,12 @@ setlocal nowinfixwidth
 set nowrap
 setlocal nowrap
 setlocal wrapmargin=0
-let s:l = 159 - ((5 * winheight(0) + 18) / 36)
+let s:l = 1 - ((0 * winheight(0) + 11) / 22)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-159
-normal! 010|
+1
+normal! 0
 tabnext 1
 if exists('s:wipebuf')
   silent exe 'bwipe ' . s:wipebuf

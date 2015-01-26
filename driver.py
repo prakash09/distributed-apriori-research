@@ -1,4 +1,5 @@
 import subprocess
+#from pssh import ParallelSSHClient
 import struct
 from threading import Thread
 import json
@@ -42,15 +43,19 @@ class AutoVivification(dict):
         except KeyError:
             value = self[item] = type(self)()
             return value
-udpsock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+udpsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 udpsock.bind(('10.0.0.21',8090))
+udpsock.listen(20)
+
 @timing
 def udpreceive():
-        data, address = udpsock.recvfrom(4096)
-        print "udpdata coming from", address[0]
+        #data, address = udpsock.recvfrom(4096)
+        connection, address = udpsock.accept()
+	data=recv_msg(connection)
+        #print "udpdata coming from", address[0]
         data=json.loads(data)
         data=eval(data)
-        print "udpdata length=", len(data)
+        print "udpdata length=", len(data), data
         return data
 global_server_dictionary=dict()
 @timing
@@ -121,15 +126,22 @@ def computation(node, obj,connection_no):
         for i in xrange(n):
                 send_msg(obj[i], serverdict1)
         return None
+def connecting(i):
+    subprocess.call(["ssh",i,"./exe.sh"])
+    return None
 @timing
 def main():
     os.chdir("/home/prakash/")
     os.system("pwd")
     os.system("./exe.sh")
     subprocess.call(["cd","/home/prakash","./exe.sh"], shell=True)
-    idpass=[ "lalit@10.0.0.22"  ]
+    idpass=[ "mamta@10.0.0.23",  "lalit@10.0.0.22" ]
+    #client=ParallelSSHClient(idpass)
+    #client.run_command('./exe.sh', sudo=True)
     for i in idpass:
-        subprocess.call(["ssh",i,"./exe.sh"])
+        th=Thread(target=connecting,args=(i,))
+        th.start()
+        #subprocess.call(["ssh",i,"./exe.sh"])
     return None
 
 temp=AutoVivification()
@@ -143,33 +155,43 @@ def socketconnection():
     except:
         print "Connection is already open"
     count=0
-    total_node=2
+    total_node=3
     node=[]
     obj=[]
     while 1:
         connection, address = serversocket.accept()
         buf1=recv_msg(connection)
         print "after RECEIVE"
-        if len(buf1) > 0:
-                data_loaded = json.loads(buf1)
-                print "data coming from ", address[0]
-                node.append(eval(data_loaded))
-                obj.append(connection)
-                print eval(data_loaded)
+        #if len(buf1) > 0:
+        data_loaded = json.loads(buf1)
+        print "data coming from ", address[0]
+        node.append(eval(data_loaded))
+        obj.append(connection)
+        print eval(data_loaded)
         count=count+1
         check=0
         if count==total_node:
                 for i in xrange(count):
-                    if(len(node[i].keys())>0):
-                        check=1
+                    try:
+                        if(len(node[i].keys())>0):
+                            check=1
+                            break
+                    except:
+                            break
+                if check==0:
+                    print "abc"
+                    
+                    break
+                    print "def"
                 connection_no=connection_no+1
                 computation(node[:], obj[:],connection_no)
                # profile.run('computation')
                 node[:]=[]
                 obj[:]=[]
                 count=0
-                if check==0:
-                    break
+                
+    #serversocket.close()
+    #udpsock.close()
     print "total time in execution =", time.time()-start_time
    
     return None
