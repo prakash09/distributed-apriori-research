@@ -7,6 +7,10 @@ import os
 import time
 from collections import defaultdict
 import pdb
+c_c=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+c_c.bind(('10.0.0.21', 8080))
+c_c.listen(20)
+
 def timing(f):
     def wrap(*args):
         time1 = time.time()
@@ -42,6 +46,14 @@ class AutoVivification(dict):
             return value
 global_server_dictionary=dict()
 @timing
+def c2c(obj1):
+   
+    return None
+
+
+
+
+    
 def computation(node, obj,connection_no):
         serverdict={}
         allkeys=[]
@@ -67,16 +79,34 @@ def computation(node, obj,connection_no):
         serverdict1=json.dumps(str(serverdict))
         for i in xrange(n):
                 send_msg(obj[i], serverdict1)
+        obj1=[]
+        data=[]
+        for i in xrange(3):
+
+            connection, address = c_c.accept()
+            print "data is coming from ", address[0]
+            buf=recv_msg(connection)
+            obj1.append(connection)
+            data.append(buf)
+
+    
+        for i in xrange(3):
+            for j in xrange(3):
+                send_msg(obj1[i],data[j])
         return None
+def connecting(i):
+    subprocess.call(["ssh", i, "./exe.sh"])
 @timing
 def main():
     os.chdir("/home/prakash/")
     os.system("pwd")
     os.system("./exe.sh")
     subprocess.call(["cd","/home/prakash","./exe.sh"], shell=True)
-    idpass=[ "lalit@10.0.0.22"  ]
+    idpass=[ "lalit@10.0.0.22" , "mamta@10.0.0.23" ]
     for i in idpass:
-        subprocess.call(["ssh",i,"./exe.sh"])
+        tx=Thread(target=connecting, args=(i,))
+        tx.start()
+        #subprocess.call(["ssh",i,"./exe.sh"])
 temp=AutoVivification()
 @timing
 def socketconnection():
@@ -88,7 +118,7 @@ def socketconnection():
     except:
         print "Connection is already open"
     count=0
-    total_node=2 #int(raw_input("Enter the total number of computers"))
+    total_node=3 #int(raw_input("Enter the total number of computers"))
     node=[]
     obj=[]
     while 1:

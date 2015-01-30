@@ -24,9 +24,9 @@ def timing(f):
         return ret
     return wrap
 largeSet = dict()
-udpsock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-udpsock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-udpsock.bind(('10.0.0.255',10000))
+
+#udpsock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+#udpsock.bind(('10.0.0.255',10000))
 
 def send_msg(sock, msg):
     # Prefix each message with a 4-byte length (network byte order)
@@ -120,7 +120,7 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
                                         minSupport,
                                         freqSet,k)
     largeSet[k] = oneCSet#largeSet is a dictionary of dictionary containing key value pairs
-    print "1-itemset with frequency are=\n",oneCSet,len(oneCSet)
+    print "joined 1-itemset with frequency are=",len(oneCSet)
     oneLFS=set()
     for x in oneCSet.keys():
 		if(oneCSet[x]>=minSupport):
@@ -141,70 +141,93 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
 		oneGFS.add(x)#extracting key of global received data
     print "length of data received should match with above len\n",len(oneGFS)
     currentLSet=set.intersection(oneGFS, oneLFS)#intersecting local and global itemsets for joining
+    udpsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    udpsock.connect(('10.0.0.21',8080))
 
-    udpsock.sendto(json.dumps(str(currentLSet)), ('10.0.0.255',10000)) #broadcasting data to all nodes
+    send_msg(udpsock,json.dumps(str(currentLSet))) #broadcasting data to all nodes
+    data=[]
+    count=0
     while True:
-        data, address= udpsock.recvfrom(10000)
-        if( address[0]=='10.0.0.21'):
-            continue
-        else:
+        data1=recv_msg(udpsock)
+        data1=json.loads(data1)
+        data1=eval(data1)
+        print "the data received from c_c object", data1
+
+        data.append(data1)
+        count=count+1
+                
+        if(count==3):
             break
-    data=json.loads(data)
-    data=eval(data)
-    print "data from lalit sir", data, len(data)
+    udpsock.close()
+   # print "data from lalit sir", data, len(data)
 
 
     print "After intersecting local with global received",currentLSet,len(currentLSet)
 
     k = 2
-
     while True:
-        currentLSet = joinSet(currentLSet, k)#currentLSet contains joined keys
-        data = joinSet(data, k)
-        currentLSet=currentLSet.union(data)
-        print "joined keys are=\n",currentLSet, len(currentLSet)
-        currentCSet = returnItemsWithMinSupport(currentLSet,transactionList,minSupport,freqSet,k)
-        print "k-itemset with frequency are=\n",currentCSet,len(oneCSet)
+        try:
+            currentLSet=set()
+            #currentLSet = joinSet(currentLSet, k)#currentLSet contains joined keys
+            for i in xrange(3):
+                data2 = joinSet(set(data[i]), k)
+                currentLSet=currentLSet.union(data2)
+            print "joined keys are=",currentLSet, len(currentLSet)
+            currentCSet = returnItemsWithMinSupport(currentLSet,transactionList,minSupport,freqSet,k)
+            print "k-itemset with frequency are=\n",currentCSet,len(currentCSet)
 
 
 
-        k_LFS={}
-        for x in currentCSet.keys():
-            if(currentCSet[x]>=minSupport):
-                k_LFS[x]=currentCSet[x]
-        print "My Local k-frequent itemsets are=\n",k_LFS,len(k_LFS)
+            k_LFS={}
+            for x in currentCSet.keys():
+                if(currentCSet[x]>=minSupport):
+                    k_LFS[x]=currentCSet[x]
+            print "My Local k-frequent itemsets are=\n",k_LFS,len(k_LFS)
 
-        clients= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        clients.connect(('10.0.0.21', 8089))
-        oneCSet=json.dumps(str(k_LFS))
-        send_msg(clients, oneCSet)
-        data=recv_msg(clients)#global data received
-	if data:
-    		data=json.loads(data)
-    		data=eval(data)
-    		print "received global k-frequent itemsets including star itemsets\n",data,len(data)
-        clients.close()
-        k_GFS=set()
-        for x in data.keys():
-        	k_GFS.add(x)
+            clients= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            clients.connect(('10.0.0.21', 8089))
+            oneCSet=json.dumps(str(k_LFS))
+            send_msg(clients, oneCSet)
+            data=recv_msg(clients)#global data received
+            if data:
+                    data=json.loads(data)
+                    data=eval(data)
+                    print "received global k-frequent itemsets including star itemsets\n",data,len(data)
+            clients.close()
+            k_GFS=set()
+            for x in data.keys():
+                    k_GFS.add(x)
 
 
-        currentLSet = set([ x for x in k_LFS.keys()])
-        currentLSet=set.intersection(k_GFS, currentLSet)
-        print "After intersecting local with global received",currentLSet,len(currentLSet)
-        udpsock.sendto(json.dumps(str(currentLSet)), ('10.0.0.255',10000)) #broadcasting data to all nodes
-        while True:
-            data, address= udpsock.recvfrom(10000)
-            if( address[0]=='10.0.0.21'):
-                continue
-            else:
-                break
-        data=json.loads(data)
-        data=eval(data)
-        largeSet[k] = currentCSet
-        k = k + 1
-        if (not currentLSet ):
-        	break
+            currentLSet = set([ x for x in k_LFS.keys()])
+            currentLSet=set.intersection(k_GFS, currentLSet)
+            print "After intersecting local with global received",currentLSet,len(currentLSet)
+            udpsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+            udpsock.connect(('10.0.0.21',8080))
+            send_msg(udpsock,json.dumps(str(currentLSet))) #broadcasting data to all nodes
+            data=[]
+            count=0
+            while True:
+                data1=recv_msg(udpsock)
+            
+                data1=json.loads(data1)
+                data1=eval(data1)
+                data.append(data1)
+                count=count+1
+            
+            
+                if(count==3):
+                    break
+            udpsock.close()
+
+        
+            largeSet[k] = currentCSet
+            k = k + 1
+            if (not currentLSet and not data ):
+                    break
+        except:
+            break
 
     def getSupport(item):
     	    #print "I am inside getSupport function"
