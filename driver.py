@@ -82,7 +82,7 @@ def computation(node, obj,connection_no):
                 for i in xrange(n):
                         average+=node[i][x]
                 temp[connection_no][x]=average/n
-                if (temp[connection_no][x] > 0.05):
+                if (temp[connection_no][x] >= 0.05):
                         serverdict[x]=temp[connection_no][x]
                 elif(length!=1):
                         for i in xrange(n):
