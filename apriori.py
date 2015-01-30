@@ -133,7 +133,7 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
                                         minSupport,
                                         freqSet,k)
     largeSet[k] = oneCSet#largeSet is a dictionary of dictionary containing key value pairs
-    print "1-itemset with frequency are=\n",oneCSet,len(oneCSet)
+    print "joined 1-itemset with frequency are=",len(oneCSet)
     oneLFS=set()
     for x in oneCSet.keys():
 		if(oneCSet[x]>=minSupport):
@@ -159,7 +159,7 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
     PreScan=set()
     while True:
         currentLSet = joinSet(currentLSet, k)#currentLSet contains joined keys
-        print "joined keys are=\n",currentLSet, len(currentLSet)
+        print "joined keys are=", len(currentLSet),"Prescan are", len(PreScan)
         currentCSet = returnItemsWithMinSupport(currentLSet,transactionList,minSupport,freqSet,k)
         print "k-itemset with frequency are=\n",currentCSet,len(currentCSet)
         prescan=returnItemsWithMinSupport(PreScan,transactionList,minSupport,freqSet,k)#
