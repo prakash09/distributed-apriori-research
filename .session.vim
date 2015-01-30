@@ -2,13 +2,13 @@ let SessionLoad = 1
 if &cp | set nocp | endif
 let s:cpo_save=&cpo
 set cpo&vim
-inoremap <expr> <Nul> jedi#complete_string(0)
 inoremap <silent> <Plug>snipMateShow =snipMate#ShowAvailableSnips()
 inoremap <silent> <Plug>snipMateBack =snipMate#BackwardsSnippet()
 inoremap <silent> <Plug>snipMateTrigger =snipMate#TriggerSnippet(1)
 inoremap <silent> <Plug>snipMateNextOrTrigger =snipMate#TriggerSnippet()
 imap <S-Tab> <Plug>snipMateBack
 inoremap <C-Tab> 	
+map! <S-Insert> <MiddleMouse>
 map  h
 xmap 	 <Plug>snipMateVisual
 smap 	 <Plug>snipMateNextOrTrigger
@@ -26,17 +26,18 @@ smap <S-Tab> <Plug>snipMateBack
 nnoremap <silent> <Plug>NetrwBrowseX :call netrw#NetrwBrowseX(expand("<cWORD>"),0)
 snoremap <silent> <Plug>snipMateBack a=snipMate#BackwardsSnippet()
 snoremap <silent> <Plug>snipMateNextOrTrigger a=snipMate#TriggerSnippet()
-inoremap  
+map <S-Insert> <MiddleMouse>
 imap 	 <Plug>snipMateNextOrTrigger
 imap 	 <Plug>snipMateShow
 let &cpo=s:cpo_save
 unlet s:cpo_save
+set background=dark
 set backspace=indent,eol,start
 set clipboard=unnamedplus
-set completeopt=menuone,longest,preview
 set expandtab
 set fileencodings=ucs-bom,utf-8,default,latin1
 set formatoptions=cq
+set guifont=Monospace\ 12
 set guioptions=aegit
 set helplang=en
 set history=700
@@ -45,22 +46,25 @@ set ignorecase
 set incsearch
 set laststatus=2
 set nomodeline
+set mouse=a
 set pastetoggle=<F2>
 set printoptions=paper:a4
 set ruler
-set runtimepath=~/.vim,~/.vim/bundle/ctrlp.vim,~/.vim/bundle/jedi-vim,~/.vim/bundle/supertab,~/.vim/bundle/tlib_vim,~/.vim/bundle/vim-addon-mw-utils,~/.vim/bundle/vim-snipmate,~/.vim/bundle/vim-snippets,/var/lib/vim/addons,/usr/share/vim/vimfiles,/usr/share/vim/vim74,/usr/share/vim/vimfiles/after,/var/lib/vim/addons/after,~/.vim/bundle/vim-snipmate/after,~/.vim/bundle/jedi-vim/after,~/.vim/after
+set runtimepath=~/.vim,~/.vim/bundle/ctrlp.vim,~/.vim/bundle/jedi-vim,~/.vim/bundle/pyflakes-vim,~/.vim/bundle/supertab,~/.vim/bundle/tlib_vim,~/.vim/bundle/vim-addon-mw-utils,~/.vim/bundle/vim-snipmate,~/.vim/bundle/vim-snippets,/var/lib/vim/addons,/usr/share/vim/vimfiles,/usr/share/vim/vim74,/usr/share/vim/vimfiles/after,/var/lib/vim/addons/after,~/.vim/bundle/vim-snipmate/after,~/.vim/bundle/jedi-vim/after,~/.vim/after
 set shiftround
 set shiftwidth=4
 set showcmd
 set smartcase
 set softtabstop=4
+set splitbelow
 set statusline=\ %{HasPaste()}%F%m%r%h\ %w\ \ CWD:\ %r%{CurDir()}%h\ \ \ Line:\ %l/%L%{GitBranchInfoString()}
 set suffixes=.bak,~,.swp,.o,.info,.aux,.log,.dvi,.bbl,.blg,.brf,.cb,.ind,.idx,.ilg,.inx,.out,.toc
 set noswapfile
 set tabstop=4
+set termencoding=utf-8
 set textwidth=79
 set undolevels=700
-set wildignore=*.pyc
+set window=22
 let s:so_save = &so | let s:siso_save = &siso | set so=0 siso=0
 let v:this_session=expand("<sfile>:p")
 silent only
@@ -69,45 +73,33 @@ if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
   let s:wipebuf = bufnr('%')
 endif
 set shortmess=aoO
-badd +0 driver.py
-args driver.py
-edit driver.py
+badd +0 .gitignore
+args .gitignore
+edit .gitignore
 set splitbelow splitright
-set nosplitbelow
 set nosplitright
 wincmd t
 set winheight=1 winwidth=1
 argglobal
-let s:cpo_save=&cpo
-set cpo&vim
-inoremap <buffer> <expr> <C-Space> jedi#complete_string(0)
-nnoremap <buffer> <silent> K :call jedi#show_documentation()
-nnoremap <buffer> \r :call jedi#rename()
-nnoremap <buffer> \n :call jedi#usages()
-nnoremap <buffer> \d :call jedi#goto_definitions()
-nnoremap <buffer> \g :call jedi#goto_assignments()
-inoremap <buffer> <silent> . .=jedi#complete_string(1)
-let &cpo=s:cpo_save
-unlet s:cpo_save
 setlocal keymap=
 setlocal noarabic
-setlocal autoindent
+setlocal noautoindent
 setlocal balloonexpr=
 setlocal nobinary
 setlocal bufhidden=
 setlocal buflisted
 setlocal buftype=
 setlocal nocindent
-setlocal cinkeys=0{,0},0),:,!^F,o,O,e
+setlocal cinkeys=0{,0},0),:,0#,!^F,o,O,e
 setlocal cinoptions=
 setlocal cinwords=if,else,while,do,for,switch
 set colorcolumn=80
 setlocal colorcolumn=80
-setlocal comments=s1:/*,mb:*,ex:*/,://,b:#,:XCOMM,n:>,fb:-
-setlocal commentstring=#%s
+setlocal comments=s1:/*,mb:*,ex:*/,://,b:#,:%,:XCOMM,n:>,fb:-
+setlocal commentstring=/*%s*/
 setlocal complete=.,w,b,u,t,i
 setlocal concealcursor=
-setlocal conceallevel=2
+setlocal conceallevel=0
 setlocal completefunc=
 setlocal nocopyindent
 setlocal cryptmethod=
@@ -120,8 +112,8 @@ setlocal nodiff
 setlocal equalprg=
 setlocal errorformat=
 setlocal expandtab
-if &filetype != 'python'
-setlocal filetype=python
+if &filetype != ''
+setlocal filetype=
 endif
 setlocal foldcolumn=0
 set nofoldenable
@@ -139,15 +131,15 @@ setlocal formatexpr=
 setlocal formatoptions=cq
 setlocal formatlistpat=^\\s*\\d\\+[\\]:.)}\\t\ ]\\s*
 setlocal grepprg=
-setlocal iminsert=2
+setlocal iminsert=0
 setlocal imsearch=2
-setlocal include=^\\s*\\(from\\|import\\)
-setlocal includeexpr=substitute(v:fname,'\\.','/','g')
-setlocal indentexpr=GetPythonIndent(v:lnum)
-setlocal indentkeys=0{,0},:,!^F,o,O,e,<:>,=elif,=except
+setlocal include=
+setlocal includeexpr=
+setlocal indentexpr=
+setlocal indentkeys=0{,0},:,0#,!^F,o,O,e
 setlocal noinfercase
 setlocal iskeyword=@,48-57,_,192-255
-setlocal keywordprg=pydoc
+setlocal keywordprg=
 setlocal nolinebreak
 setlocal nolisp
 setlocal nolist
@@ -159,7 +151,7 @@ setlocal nrformats=octal,hex
 set number
 setlocal number
 setlocal numberwidth=4
-setlocal omnifunc=jedi#completions
+setlocal omnifunc=
 setlocal path=
 setlocal nopreserveindent
 setlocal nopreviewwindow
@@ -178,13 +170,13 @@ setlocal spellcapcheck=[.?!]\\_[\\])'\"\	\ ]\\+
 setlocal spellfile=
 setlocal spelllang=en
 setlocal statusline=
-setlocal suffixesadd=.py
+setlocal suffixesadd=
 setlocal noswapfile
 setlocal synmaxcol=3000
-if &syntax != 'python'
-setlocal syntax=python
+if &syntax != ''
+setlocal syntax=
 endif
-setlocal tabstop=8
+setlocal tabstop=4
 setlocal tags=
 setlocal textwidth=79
 setlocal thesaurus=
@@ -194,12 +186,12 @@ setlocal nowinfixwidth
 set nowrap
 setlocal nowrap
 setlocal wrapmargin=0
-let s:l = 1 - ((0 * winheight(0) + 18) / 37)
+let s:l = 1 - ((0 * winheight(0) + 10) / 21)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
 1
-normal! 0
+normal! 012|
 tabnext 1
 if exists('s:wipebuf')
   silent exe 'bwipe ' . s:wipebuf
