@@ -116,8 +116,8 @@ def computation(node, obj,connection_no):
             data_from_client=[udpreceive() for i in xrange(n)]
             for i in xrange(n):
                 for x in data_from_client[i].keys():
-                        temp2=temp[connection_no][x]+(data_from_client[i][x])/2
-                        if temp2 > 0.05:
+                        temp2=temp[connection_no][x]+(data_from_client[i][x])/n
+                        if temp2 >= 0.05:
                                 serverdict[x]=temp2
         global_server_dictionary[connection_no]=serverdict
         print "global dictionary when connection number is ", connection_no
