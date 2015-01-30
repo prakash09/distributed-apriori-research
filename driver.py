@@ -71,7 +71,7 @@ def computation(node, obj,connection_no):
             for i in xrange(n):
                     average+=node[i][x]
             temp[connection_no][x]=average/n
-            if (temp[connection_no][x] > 0.05):
+            if (temp[connection_no][x] >= 0.05):
                     serverdict[x]=temp[connection_no][x]
         global_server_dictionary[connection_no]=serverdict
         print "global dictionary when connection number is ", connection_no
