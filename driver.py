@@ -108,17 +108,22 @@ def computation(node, obj,connection_no):
                     for z in stardict[i].keys():
                         if (set.intersection(x,z)==x):
                             del stardict[i][z]
+
       
         if(length!=1):
+            temp2=defaultdict(int)
             for i in xrange(n):
                 stardict[i]=json.dumps(str(stardict[i]))
                 send_msg(obj[i], stardict[i])
             data_from_client=[udpreceive() for i in xrange(n)]
             for i in xrange(n):
                 for x in data_from_client[i].keys():
-                        temp2=temp[connection_no][x]+(data_from_client[i][x])/n
-                        if temp2 >= 0.05:
-                                serverdict[x]=temp2
+                    if temp2[x]==0 :
+                        temp2[x]=temp[connection_no][x] + (data_from_client[i][x])/n
+                    else:
+                        temp2[x]+=temp2[x]+(data_from_client[i][x])/n
+                    if temp2[x] >= 0.05:
+                            serverdict[x]=temp2[x]
         global_server_dictionary[connection_no]=serverdict
         print "global dictionary when connection number is ", connection_no
         print global_server_dictionary

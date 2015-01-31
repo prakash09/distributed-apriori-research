@@ -28,19 +28,33 @@ largeSet = dict()
 @timing
 def starResove(x, largeSet, k):
 	#print " I am inside star resolve"
-	subset= set(combinations(x,k-1))
-    	#pdb.set_trace()
-	temp=1
-	for y in subset:
-        	y=frozenset(list(y))
-		if (y in largeSet[k-1]):
-			if largeSet[k-1][y]< temp:
-				temp=largeSet[k-1][y]
+        j=k-1
+        temp=1
+        c=0
+        while True:
+	    #pdb.set_trace()
+	    subset=set(combinations(x,j))
+               
+            for y in subset:
+                y=frozenset(list(y))
+                if (y in largeSet[j]):
+                        c=c+1
+                        if largeSet[j][y]< temp:
+                                    temp=largeSet[j][y]
+            if(c>1):
+                break
+            elif(c==1):
+                j=k-j
+                #subset.clear()
+            else:
+                #subset.clear()
+                j=j-1
 
-	if( temp==1):
-        	return 0
-    	else:
-        	return temp
+
+	#if( temp==1):
+        #	return 0
+    	#else:
+        return temp
 def send_msg(sock, msg):
     # Prefix each message with a 4-byte length (network byte order)
     msg = struct.pack('>I', len(msg)) + msg
@@ -138,7 +152,7 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
     for x in oneCSet.keys():
 		if(oneCSet[x]>=minSupport):
 			oneLFS.add(x)#oneLFS contains local 1-frequent itemsets without support value
-    print "My Local 1-frequent itemsets are=\n",oneLFS,len(oneLFS)
+   # print "My Local 1-frequent itemsets are=\n",oneLFS,len(oneLFS)
     clientsocket= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     clientsocket.connect(('10.0.0.21', 8089))
     oneCSet=json.dumps(str(oneCSet))
@@ -169,7 +183,7 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
         for x in currentCSet.keys():
             if(currentCSet[x]>=minSupport):
                 k_LFS[x]=currentCSet[x]
-        print "My Local k-frequent itemsets are=\n",k_LFS,len(k_LFS)
+        #print "My Local k-frequent itemsets are=\n",k_LFS,len(k_LFS)
 	# add prescan with k_LFS to send it to server
 	k_LFS=dict(k_LFS.items()+prescan.items())#
         clients= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -212,8 +226,8 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
         	    k_GFS.add(x)
 	PreScan= k_GFS.difference(PreScan) #take diffence of received globall set with already scanned data items
 #	print "extra needed to scan with k+1 itemsets=\n",PreScan,len(PreScan)
-        if not k_LFS:
-            break
+        #if not k_LFS:
+         #   break
         currentLSet = set([ x for x in k_LFS.keys()])
         currentLSet=set.intersection(k_GFS, currentLSet)
         print "After intersecting local with global received",currentLSet,len(currentLSet)

@@ -32,8 +32,8 @@ def starResove(x, largeSet, k):
     	#pdb.set_trace()
 	temp=1
 	for y in subset:
-        	y=frozenset(list(y))
-		if (y in largeSet[k-1]):
+      	y=frozenset(list(y))
+        	if (y in largeSet[k-1]):
 			if largeSet[k-1][y]< temp:
 				temp=largeSet[k-1][y]
 
@@ -133,7 +133,7 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
                                         minSupport,
                                         freqSet,k)
     largeSet[k] = oneCSet#largeSet is a dictionary of dictionary containing key value pairs
-    print "1-itemset with frequency are=\n",oneCSet,len(oneCSet)
+    print "joined 1-itemset with frequency are=",len(oneCSet)
     oneLFS=set()
     for x in oneCSet.keys():
 		if(oneCSet[x]>=minSupport):
@@ -159,7 +159,7 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
     PreScan=set()
     while True:
         currentLSet = joinSet(currentLSet, k)#currentLSet contains joined keys
-        print "joined keys are=\n",currentLSet, len(currentLSet)
+        print "joined keys are=", len(currentLSet),"Prescan are", len(PreScan)
         currentCSet = returnItemsWithMinSupport(currentLSet,transactionList,minSupport,freqSet,k)
         print "k-itemset with frequency are=\n",currentCSet,len(currentCSet)
         prescan=returnItemsWithMinSupport(PreScan,transactionList,minSupport,freqSet,k)#
@@ -175,14 +175,16 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
         clients= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         clients.connect(('10.0.0.21', 8089))
         oneCSet=json.dumps(str(k_LFS))
+       
         send_msg(clients, oneCSet)
+        
         data=recv_msg(clients)
        	if data:
     		data=json.loads(data)
 	    	data=eval(data)
 	    	print "star itemsets received are=",data,len(data)
         #pdb.set_trace()
-        for x in data.keys():
+                for x in data.keys():
 			try:
 				data[x]=currentCSet[x]
             #if x in currentCSet:
@@ -191,7 +193,7 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
 			except KeyError:
 				data[x]=starResove(x,largeSet,k)
 	
-	print "value of star itemsets calculated are=",data,len(data)
+	        print "value of star itemsets calculated are=",data,len(data)
         data=json.dumps(str(data))
         udpsocket= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         udpsocket.connect(('10.0.0.21',8090))
@@ -199,25 +201,31 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
         send_msg(udpsocket,data)
         udpsocket.close()
         data=recv_msg(clients)#global data received
+        k_GFS=set()
 	if data:
     		data=json.loads(data)
     		data=eval(data)
     		print "received global k-frequent itemsets including star itemsets\n",data,len(data)
-        clients.close()
-        k_GFS=set()
-        for x in data.keys():
-        	k_GFS.add(x)
+                clients.close()
+                
+                for x in data.keys():
+        	    k_GFS.add(x)
 	PreScan= k_GFS.difference(PreScan) #take diffence of received globall set with already scanned data items
 #	print "extra needed to scan with k+1 itemsets=\n",PreScan,len(PreScan)
+        #if not k_LFS:
+         #   break
         currentLSet = set([ x for x in k_LFS.keys()])
         currentLSet=set.intersection(k_GFS, currentLSet)
         print "After intersecting local with global received",currentLSet,len(currentLSet)
         largeSet[k] = currentCSet
         k = k + 1
         if (not currentLSet and not PreScan):
-			oneCSet=json.dumps(str(currentLSet))
-			send_msg(clients, oneCSet)
-			break
+            clients= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            clients.connect(('10.0.0.21', 8089))
+            oneCSet=json.dumps(str(currentLSet))
+            send_msg(clients, oneCSet)
+            clients.close()
+            break
 
     def getSupport(item):
     	    #print "I am inside getSupport function"
