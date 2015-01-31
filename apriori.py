@@ -178,15 +178,15 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
 
 
 
-            k_LFS={}
+            k_LFS=set()
             for x in currentCSet.keys():
                 if(currentCSet[x]>=minSupport):
-                    k_LFS[x]=currentCSet[x]
+                    k_LFS.add(x)
             print "My Local k-frequent itemsets are=\n",k_LFS,len(k_LFS)
 
             clients= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             clients.connect(('10.0.0.21', 8089))
-            oneCSet=json.dumps(str(k_LFS))
+            oneCSet=json.dumps(str(currentCSet))
             send_msg(clients, oneCSet)
             data=recv_msg(clients)#global data received
             if data:
@@ -199,8 +199,8 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
                     k_GFS.add(x)
 
 
-            currentLSet = set([ x for x in k_LFS.keys()])
-            currentLSet=set.intersection(k_GFS, currentLSet)
+            #currentLSet = set([ x for x in k_LFS.keys()])
+            currentLSet=set.intersection(k_GFS, k_LFS)
             print "After intersecting local with global received",currentLSet,len(currentLSet)
             udpsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -224,7 +224,7 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
         
             largeSet[k] = currentCSet
             k = k + 1
-            if (not currentLSet and not data ):
+            if ( not data ):
                     break
         except:
             break

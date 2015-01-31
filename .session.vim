@@ -9,7 +9,6 @@ inoremap <silent> <Plug>snipMateTrigger =snipMate#TriggerSnippet(1)
 inoremap <silent> <Plug>snipMateNextOrTrigger =snipMate#TriggerSnippet()
 imap <S-Tab> <Plug>snipMateBack
 inoremap <C-Tab> 	
-map! <S-Insert> <MiddleMouse>
 map  h
 xmap 	 <Plug>snipMateVisual
 smap 	 <Plug>snipMateNextOrTrigger
@@ -27,7 +26,6 @@ smap <S-Tab> <Plug>snipMateBack
 nnoremap <silent> <Plug>NetrwBrowseX :call netrw#NetrwBrowseX(expand("<cWORD>"),0)
 snoremap <silent> <Plug>snipMateBack a=snipMate#BackwardsSnippet()
 snoremap <silent> <Plug>snipMateNextOrTrigger a=snipMate#TriggerSnippet()
-map <S-Insert> <MiddleMouse>
 inoremap  
 imap 	 <Plug>snipMateNextOrTrigger
 imap 	 <Plug>snipMateShow
@@ -57,11 +55,11 @@ set ignorecase
 set incsearch
 set laststatus=2
 set nomodeline
-set mouse=a
 set pastetoggle=<F2>
 set printoptions=paper:a4
 set ruler
 set runtimepath=~/.vim,~/.vim/bundle/ctrlp.vim,~/.vim/bundle/jedi-vim,~/.vim/bundle/pyflakes-vim,~/.vim/bundle/supertab,~/.vim/bundle/tlib_vim,~/.vim/bundle/vim-addon-mw-utils,~/.vim/bundle/vim-snipmate,~/.vim/bundle/vim-snippets,/var/lib/vim/addons,/usr/share/vim/vimfiles,/usr/share/vim/vim74,/usr/share/vim/vimfiles/after,/var/lib/vim/addons/after,~/.vim/bundle/vim-snipmate/after,~/.vim/bundle/jedi-vim/after,~/.vim/after
+set scrollopt=ver,jump,hor
 set shiftround
 set shiftwidth=4
 set showcmd
@@ -72,11 +70,10 @@ set statusline=\ %{HasPaste()}%F%m%r%h\ %w\ \ CWD:\ %r%{CurDir()}%h\ \ \ Line:\ 
 set suffixes=.bak,~,.swp,.o,.info,.aux,.log,.dvi,.bbl,.blg,.brf,.cb,.ind,.idx,.ilg,.inx,.out,.toc
 set noswapfile
 set tabstop=4
-set termencoding=utf-8
 set textwidth=79
 set undolevels=700
+set updatecount=10000
 set wildignore=*.pyc,*_build/*,*/coverage/*
-set window=37
 let s:so_save = &so | let s:siso_save = &siso | set so=0 siso=0
 let v:this_session=expand("<sfile>:p")
 silent only
@@ -85,9 +82,10 @@ if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
   let s:wipebuf = bufnr('%')
 endif
 set shortmess=aoO
-badd +0 driver.py
-args driver.py
-edit driver.py
+badd +1 /tmp/7KXTla_apriori.py
+badd +0 apriori.py
+args /tmp/7KXTla_apriori.py apriori.py
+edit /tmp/7KXTla_apriori.py
 set splitbelow splitright
 set nosplitright
 wincmd t
@@ -130,27 +128,27 @@ setlocal conceallevel=2
 setlocal completefunc=
 setlocal nocopyindent
 setlocal cryptmethod=
-setlocal nocursorbind
+setlocal cursorbind
 setlocal nocursorcolumn
 setlocal nocursorline
 setlocal define=
 setlocal dictionary=
-setlocal nodiff
+setlocal diff
 setlocal equalprg=
 setlocal errorformat=
 setlocal expandtab
 if &filetype != 'python'
 setlocal filetype=python
 endif
-setlocal foldcolumn=0
+setlocal foldcolumn=2
 set nofoldenable
-setlocal nofoldenable
+setlocal foldenable
 setlocal foldexpr=0
 setlocal foldignore=#
 setlocal foldlevel=0
 setlocal foldmarker={{{,}}}
 set foldmethod=indent
-setlocal foldmethod=indent
+setlocal foldmethod=diff
 setlocal foldminlines=1
 setlocal foldnestmax=20
 setlocal foldtext=foldtext()
@@ -158,8 +156,8 @@ setlocal formatexpr=
 setlocal formatoptions=cq
 setlocal formatlistpat=^\\s*\\d\\+[\\]:.)}\\t\ ]\\s*
 setlocal grepprg=
-setlocal iminsert=0
-setlocal imsearch=0
+setlocal iminsert=2
+setlocal imsearch=2
 setlocal include=^\\s*\\(from\\|import\\)
 setlocal includeexpr=substitute(v:fname,'\\.','/','g')
 setlocal indentexpr=GetPythonIndent(v:lnum)
@@ -183,11 +181,11 @@ setlocal path=
 setlocal nopreserveindent
 setlocal nopreviewwindow
 setlocal quoteescape=\\
-setlocal noreadonly
+setlocal readonly
 setlocal norelativenumber
 setlocal norightleft
 setlocal rightleftcmd=search
-setlocal noscrollbind
+setlocal scrollbind
 setlocal shiftwidth=4
 setlocal noshortname
 setlocal nosmartindent
@@ -213,12 +211,12 @@ setlocal nowinfixwidth
 set nowrap
 setlocal nowrap
 setlocal wrapmargin=0
-let s:l = 74 - ((17 * winheight(0) + 18) / 36)
+let s:l = 1 - ((0 * winheight(0) + 11) / 22)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-74
-normal! 041|
+1
+normal! 0
 tabnext 1
 if exists('s:wipebuf')
   silent exe 'bwipe ' . s:wipebuf
