@@ -45,15 +45,7 @@ class AutoVivification(dict):
             value = self[item] = type(self)()
             return value
 global_server_dictionary=dict()
-@timing
-def c2c(obj1):
-   
-    return None
-
-
-
-
-    
+@timing    
 def computation(node, obj,connection_no):
         serverdict={}
         allkeys=[]
