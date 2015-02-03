@@ -25,36 +25,6 @@ def timing(f):
         return ret
     return wrap
 largeSet = dict()
-@timing
-def starResove(x, largeSet, k):
-	#print " I am inside star resolve"
-        j=k-1
-        temp=1
-        #c=0
-        #while True:
-	    #pdb.set_trace()
-        subset=set(combinations(x,j))
-               
-        for y in subset:
-            y=frozenset(list(y))
-            if (y in largeSet[j]):
-        #              c=c+1
-                    if largeSet[j][y]< temp:
-                                temp=largeSet[j][y]
-          #  if(c>1):
-#                break
-#            elif(c==1):
-#                j=k-j
-#                #subset.clear()
-#            else:
-#                #subset.clear()
-#                j=j-1
-
-
-        if( temp==1):
-            return 0
-        else:
-            return temp
 def send_msg(sock, msg):
     # Prefix each message with a 4-byte length (network byte order)
     msg = struct.pack('>I', len(msg)) + msg
@@ -161,32 +131,32 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
     if data:
     	data=json.loads(data)
     	data=eval(data)
-    	print "received global 1-frequent itemsets:\n",data,len(data)
+    	print "received global 1-frequent itemsets:\n",len(data)
     clientsocket.close()
     oneGFS=set()
     for x in data.keys():
 		oneGFS.add(x)#extracting key of global received data
     print "length of data received should match with above len\n",len(oneGFS)
     currentLSet=set.intersection(oneGFS, oneLFS)#intersecting local and global itemsets for joining
-    print "After intersecting local with global received",currentLSet,len(currentLSet)
+    print "After intersecting local with global received",len(currentLSet)
     k = 2
-    PreScan=set()
+    #PreScan=set()
     while True:
         try:
             currentLSet = joinSet(currentLSet, k)#currentLSet contains joined keys
-            print "joined keys are=", len(currentLSet),"Prescan are", len(PreScan)
+            print "joined keys are=", len(currentLSet)
             currentCSet = returnItemsWithMinSupport(currentLSet,transactionList,minSupport,freqSet,k)
-            print "k-itemset with frequency are=\n",currentCSet,len(currentCSet)
-            prescan=returnItemsWithMinSupport(PreScan,transactionList,minSupport,freqSet,k)#
+            print "k-itemset with frequency are=\n",len(currentCSet)
+     #       prescan=returnItemsWithMinSupport(PreScan,transactionList,minSupport,freqSet,k)#
     #	print "Previous itemsets need to be scanned are=\n",prescan,len(prescan)
-            PreScan=currentLSet# new set which need to be differentiate
+      #      PreScan=currentLSet# new set which need to be differentiate
             k_LFS={}
             for x in currentCSet.keys():
                 if(currentCSet[x]>=minSupport):
                     k_LFS[x]=currentCSet[x]
             #print "My Local k-frequent itemsets are=\n",k_LFS,len(k_LFS)
             # add prescan with k_LFS to send it to server
-            k_LFS=dict(k_LFS.items()+prescan.items())#
+       #     k_LFS=dict(k_LFS.items()+prescan.items())#
             clients= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             clients.connect(('10.0.0.21', 8089))
             oneCSet=json.dumps(str(k_LFS))
@@ -194,10 +164,11 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
             send_msg(clients, oneCSet)
             
             data=recv_msg(clients)
+            accurate_star=set()
             if data:
                     data=json.loads(data)
                     data=eval(data)
-                    print "star itemsets received are=",data,len(data)
+                    print "star itemsets received are=",len(data)
             #pdb.set_trace()
                     for x in data.keys():
                             try:
@@ -206,9 +177,14 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
                 # data[x]=currentCSet[x]
                 #else:
                             except KeyError:
-                                    data[x]=starResove(x,largeSet,k)
+                                    accurate_star.add(x)        
+                                    #data[x]=starResove(x,largeSet,k)
+                    accurateStar=returnItemsWithMinSupport(accurate_star,transactionList,minSupport,freqSet,k)
+                    for x in accurateStar.keys():
+                        data[x]=accurateStar[x]
+
             
-                    print "value of star itemsets calculated are=",data,len(data)
+                    print "value of star itemsets calculated are=",len(data)
             data=json.dumps(str(data))
             udpsocket= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             udpsocket.connect(('10.0.0.21',8090))
@@ -220,18 +196,18 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
             if data:
                     data=json.loads(data)
                     data=eval(data)
-                    print "received global k-frequent itemsets including star itemsets\n",data,len(data)
+                    print "received global k-frequent itemsets including star itemsets\n",len(data)
                     clients.close()
                     
                     for x in data.keys():
                         k_GFS.add(x)
-            PreScan= k_GFS.difference(PreScan) #take diffence of received globall set with already scanned data items
+            #PreScan= k_GFS.difference(PreScan) #take diffence of received globall set with already scanned data items
     #	print "extra needed to scan with k+1 itemsets=\n",PreScan,len(PreScan)
             #if not k_LFS:
             #   break
             currentLSet = set([ x for x in k_LFS.keys()])
-            currentLSet=set.intersection(k_GFS, currentLSet)
-            print "After intersecting local with global received",currentLSet,len(currentLSet)
+            currentLSet=k_GFS&currentLSet
+            print "After intersecting local with global received",len(currentLSet)
             largeSet[k] = currentCSet
             k = k + 1
         #if (not currentLSet and not PreScan):

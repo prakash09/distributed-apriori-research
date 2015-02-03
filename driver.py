@@ -63,7 +63,7 @@ def computation(node, obj,connection_no):
         serverdict={}
         allkeys=[]
         stardict=[]
-        infrequent=[]
+        #infrequent=[]
         data_from_client=[]
         n=len(node)
         for i in xrange(n):
@@ -81,38 +81,17 @@ def computation(node, obj,connection_no):
        
         for x in allkeys:
             average=0
-            if(len(x)==connection_no):
-                for i in xrange(n):
-                        average+=node[i][x]
-                temp[connection_no][x]=average/n
-                if (temp[connection_no][x] >= 0.05):
-                        serverdict[x]=temp[connection_no][x]
-                elif(connection_no>1):
-                        for i in xrange(n):
-                            if(node[i][x]==0):
-                                stardict[i][x]=0
-            else:
-                    average=0
+            
+            for i in xrange(n):
+                    average+=node[i][x]
+            temp[connection_no][x]=average/n
+            if (temp[connection_no][x] >= 0.05):
+                    serverdict[x]=temp[connection_no][x]
+            elif(connection_no>1):
                     for i in xrange(n):
-                        average+=node[i][x]
-                    temp[connection_no-1][x]=temp[connection_no-1][x]+average/n
-                    if (temp[connection_no-1][x]<0.05):
-                        del global_server_dictionary[connection_no-1][x]
-                  #      print "self deletion", x
-                        infrequent.append(x)
-       
-        if connection_no>2:
-            for x in infrequent:
-                x=set(x)
-                for y in serverdict.keys():
-                    if (set.intersection(x, y)==x):
-                        del serverdict[y]
-                for i in xrange(n):
-                    for z in stardict[i].keys():
-                        if (set.intersection(x,z)==x):
-                            del stardict[i][z]
-
-      
+                        if(node[i][x]==0):
+                            stardict[i][x]=0
+                     
         if(connection_no>1):
             temp2=defaultdict(int)
             for i in xrange(n):
