@@ -10,7 +10,7 @@ import struct
 import socket
 import json
 import sys
-import pdb
+#import pdb
 from itertools import chain, combinations
 from collections import defaultdict
 from optparse import OptionParser
@@ -30,31 +30,31 @@ def starResove(x, largeSet, k):
 	#print " I am inside star resolve"
         j=k-1
         temp=1
-        c=0
-        while True:
+        #c=0
+        #while True:
 	    #pdb.set_trace()
-	    subset=set(combinations(x,j))
+        subset=set(combinations(x,j))
                
-            for y in subset:
-                y=frozenset(list(y))
-                if (y in largeSet[j]):
-                        c=c+1
-                        if largeSet[j][y]< temp:
-                                    temp=largeSet[j][y]
-            if(c>1):
-                break
-            elif(c==1):
-                j=k-j
-                #subset.clear()
-            else:
-                #subset.clear()
-                j=j-1
+        for y in subset:
+            y=frozenset(list(y))
+            if (y in largeSet[j]):
+        #              c=c+1
+                    if largeSet[j][y]< temp:
+                                temp=largeSet[j][y]
+          #  if(c>1):
+#                break
+#            elif(c==1):
+#                j=k-j
+#                #subset.clear()
+#            else:
+#                #subset.clear()
+#                j=j-1
 
 
-	#if( temp==1):
-        #	return 0
-    	#else:
-        return temp
+        if( temp==1):
+            return 0
+        else:
+            return temp
 def send_msg(sock, msg):
     # Prefix each message with a 4-byte length (network byte order)
     msg = struct.pack('>I', len(msg)) + msg
@@ -172,74 +172,77 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
     k = 2
     PreScan=set()
     while True:
-        currentLSet = joinSet(currentLSet, k)#currentLSet contains joined keys
-        print "joined keys are=", len(currentLSet),"Prescan are", len(PreScan)
-        currentCSet = returnItemsWithMinSupport(currentLSet,transactionList,minSupport,freqSet,k)
-        print "k-itemset with frequency are=\n",currentCSet,len(currentCSet)
-        prescan=returnItemsWithMinSupport(PreScan,transactionList,minSupport,freqSet,k)#
-#	print "Previous itemsets need to be scanned are=\n",prescan,len(prescan)
-        PreScan=currentLSet# new set which need to be differentiate
-        k_LFS={}
-        for x in currentCSet.keys():
-            if(currentCSet[x]>=minSupport):
-                k_LFS[x]=currentCSet[x]
-        #print "My Local k-frequent itemsets are=\n",k_LFS,len(k_LFS)
-	# add prescan with k_LFS to send it to server
-	k_LFS=dict(k_LFS.items()+prescan.items())#
-        clients= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        clients.connect(('10.0.0.21', 8089))
-        oneCSet=json.dumps(str(k_LFS))
-       
-        send_msg(clients, oneCSet)
-        
-        data=recv_msg(clients)
-       	if data:
-    		data=json.loads(data)
-	    	data=eval(data)
-	    	print "star itemsets received are=",data,len(data)
-        #pdb.set_trace()
-                for x in data.keys():
-			try:
-				data[x]=currentCSet[x]
-            #if x in currentCSet:
-               # data[x]=currentCSet[x]
-            #else:
-			except KeyError:
-				data[x]=starResove(x,largeSet,k)
-	
-	        print "value of star itemsets calculated are=",data,len(data)
-        data=json.dumps(str(data))
-        udpsocket= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        udpsocket.connect(('10.0.0.21',8090))
-        #udpsocket.sendto(str(data),('10.0.0.21',8090))
-        send_msg(udpsocket,data)
-        udpsocket.close()
-        data=recv_msg(clients)#global data received
-        k_GFS=set()
-	if data:
-    		data=json.loads(data)
-    		data=eval(data)
-    		print "received global k-frequent itemsets including star itemsets\n",data,len(data)
-                clients.close()
-                
-                for x in data.keys():
-        	    k_GFS.add(x)
-	PreScan= k_GFS.difference(PreScan) #take diffence of received globall set with already scanned data items
-#	print "extra needed to scan with k+1 itemsets=\n",PreScan,len(PreScan)
-        #if not k_LFS:
-         #   break
-        currentLSet = set([ x for x in k_LFS.keys()])
-        currentLSet=set.intersection(k_GFS, currentLSet)
-        print "After intersecting local with global received",currentLSet,len(currentLSet)
-        largeSet[k] = currentCSet
-        k = k + 1
-        if (not currentLSet and not PreScan):
+        try:
+            currentLSet = joinSet(currentLSet, k)#currentLSet contains joined keys
+            print "joined keys are=", len(currentLSet),"Prescan are", len(PreScan)
+            currentCSet = returnItemsWithMinSupport(currentLSet,transactionList,minSupport,freqSet,k)
+            print "k-itemset with frequency are=\n",currentCSet,len(currentCSet)
+            prescan=returnItemsWithMinSupport(PreScan,transactionList,minSupport,freqSet,k)#
+    #	print "Previous itemsets need to be scanned are=\n",prescan,len(prescan)
+            PreScan=currentLSet# new set which need to be differentiate
+            k_LFS={}
+            for x in currentCSet.keys():
+                if(currentCSet[x]>=minSupport):
+                    k_LFS[x]=currentCSet[x]
+            #print "My Local k-frequent itemsets are=\n",k_LFS,len(k_LFS)
+            # add prescan with k_LFS to send it to server
+            k_LFS=dict(k_LFS.items()+prescan.items())#
             clients= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             clients.connect(('10.0.0.21', 8089))
-            oneCSet=json.dumps(str(currentLSet))
+            oneCSet=json.dumps(str(k_LFS))
+        
             send_msg(clients, oneCSet)
-            clients.close()
-            break
+            
+            data=recv_msg(clients)
+            if data:
+                    data=json.loads(data)
+                    data=eval(data)
+                    print "star itemsets received are=",data,len(data)
+            #pdb.set_trace()
+                    for x in data.keys():
+                            try:
+                                    data[x]=currentCSet[x]
+                #if x in currentCSet:
+                # data[x]=currentCSet[x]
+                #else:
+                            except KeyError:
+                                    data[x]=starResove(x,largeSet,k)
+            
+                    print "value of star itemsets calculated are=",data,len(data)
+            data=json.dumps(str(data))
+            udpsocket= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            udpsocket.connect(('10.0.0.21',8090))
+            #udpsocket.sendto(str(data),('10.0.0.21',8090))
+            send_msg(udpsocket,data)
+            udpsocket.close()
+            data=recv_msg(clients)#global data received
+            k_GFS=set()
+            if data:
+                    data=json.loads(data)
+                    data=eval(data)
+                    print "received global k-frequent itemsets including star itemsets\n",data,len(data)
+                    clients.close()
+                    
+                    for x in data.keys():
+                        k_GFS.add(x)
+            PreScan= k_GFS.difference(PreScan) #take diffence of received globall set with already scanned data items
+    #	print "extra needed to scan with k+1 itemsets=\n",PreScan,len(PreScan)
+            #if not k_LFS:
+            #   break
+            currentLSet = set([ x for x in k_LFS.keys()])
+            currentLSet=set.intersection(k_GFS, currentLSet)
+            print "After intersecting local with global received",currentLSet,len(currentLSet)
+            largeSet[k] = currentCSet
+            k = k + 1
+        #if (not currentLSet and not PreScan):
+         #   clients= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+          #  clients.connect(('10.0.0.21', 8089))
+           # oneCSet=json.dumps(str(currentLSet))
+            #send_msg(clients, oneCSet)
+         #   clients.close()
+          #  break
+        except:
+              break
 
     def getSupport(item):
     	    #print "I am inside getSupport function"

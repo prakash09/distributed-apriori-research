@@ -69,11 +69,14 @@ def computation(node, obj,connection_no):
         for i in xrange(n):
                 node[i]=defaultdict(lambda: 0, node[i])
                 stardict.append({})
-                allkeys=[x for x in node[i].keys() ]
-        if allkeys:
-            length=len(allkeys[0])
-        else:
-            length=0
+                #allkeys=[x for x in node[i].keys() ]
+        for i in xrange(n):
+            for x in node[i].keys():
+                allkeys.append(x)
+        #if allkeys:
+        #    length=len(allkeys[0])
+        #else:
+        #    length=0
         allkeys=set(allkeys)
        
         for x in allkeys:
@@ -84,7 +87,7 @@ def computation(node, obj,connection_no):
                 temp[connection_no][x]=average/n
                 if (temp[connection_no][x] >= 0.05):
                         serverdict[x]=temp[connection_no][x]
-                elif(length!=1):
+                elif(connection_no>1):
                         for i in xrange(n):
                             if(node[i][x]==0):
                                 stardict[i][x]=0
@@ -110,7 +113,7 @@ def computation(node, obj,connection_no):
                             del stardict[i][z]
 
       
-        if(length!=1):
+        if(connection_no>1):
             temp2=defaultdict(int)
             for i in xrange(n):
                 stardict[i]=json.dumps(str(stardict[i]))
@@ -184,10 +187,10 @@ def socketconnection():
                     except:
                             break
                 if check==0:
-                    print "abc"
+                   # print "abc"
                     
                     break
-                    print "def"
+                    #print "def"
                 connection_no=connection_no+1
                 computation(node[:], obj[:],connection_no)
                # profile.run('computation')
