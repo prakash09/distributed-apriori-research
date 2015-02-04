@@ -73,7 +73,7 @@ def computation(node, obj,connection_no):
                 send_msg(obj[i], serverdict1)
         obj1=[]
         data=[]
-        for i in xrange(3):
+        for i in xrange(2):
 
             connection, address = c_c.accept()
             print "data is coming from ", address[0]
@@ -82,8 +82,8 @@ def computation(node, obj,connection_no):
             data.append(buf)
 
     
-        for i in xrange(3):
-            for j in xrange(3):
+        for i in xrange(2):
+            for j in xrange(2):
                 send_msg(obj1[i],data[j])
         return None
 def connecting(i):
@@ -94,7 +94,7 @@ def main():
     os.system("pwd")
     os.system("./exe.sh")
     subprocess.call(["cd","/home/prakash","./exe.sh"], shell=True)
-    idpass=[ "lalit@10.0.0.22" , "mamta@10.0.0.23" ]
+    idpass=[ "lalit@10.0.0.22"  ]
     for i in idpass:
         tx=Thread(target=connecting, args=(i,))
         tx.start()
@@ -110,7 +110,7 @@ def socketconnection():
     except:
         print "Connection is already open"
     count=0
-    total_node=3 #int(raw_input("Enter the total number of computers"))
+    total_node=2 #int(raw_input("Enter the total number of computers"))
     node=[]
     obj=[]
     while 1:

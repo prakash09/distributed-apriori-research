@@ -125,7 +125,7 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
     for x in oneCSet.keys():
 		if(oneCSet[x]>=minSupport):
 			oneLFS.add(x)#oneLFS contains local 1-frequent itemsets without support value
-    print "My Local 1-frequent itemsets are=\n",oneLFS,len(oneLFS)
+    print "My Local 1-frequent itemsets are=\n",len(oneLFS)
     clientsocket= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     clientsocket.connect(('10.0.0.21', 8089))
     oneCSet=json.dumps(str(oneCSet))
@@ -134,7 +134,7 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
     if data:
     	data=json.loads(data)
     	data=eval(data)
-    	print "received global 1-frequent itemsets:\n",data,len(data)
+    	print "received global 1-frequent itemsets:\n",len(data)
     clientsocket.close()
     oneGFS=set()
     for x in data.keys():
@@ -151,30 +151,30 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
         data1=recv_msg(udpsock)
         data1=json.loads(data1)
         data1=eval(data1)
-        print "the data received from c_c object", data1
+        #print "the data received from c_c object", data1
 
         data.append(data1)
         count=count+1
                 
-        if(count==3):
+        if(count==2):
             break
     udpsock.close()
    # print "data from lalit sir", data, len(data)
 
 
-    print "After intersecting local with global received",currentLSet,len(currentLSet)
+    print "After intersecting local with global received",len(currentLSet)
 
     k = 2
     while True:
         try:
             currentLSet=set()
             #currentLSet = joinSet(currentLSet, k)#currentLSet contains joined keys
-            for i in xrange(3):
+            for i in xrange(2):
                 data2 = joinSet(set(data[i]), k)
                 currentLSet=currentLSet.union(data2)
-            print "joined keys are=",currentLSet, len(currentLSet)
+            print "joined keys are=", len(currentLSet)
             currentCSet = returnItemsWithMinSupport(currentLSet,transactionList,minSupport,freqSet,k)
-            print "k-itemset with frequency are=\n",currentCSet,len(currentCSet)
+            print "k-itemset with frequency are=\n",len(currentCSet)
 
 
 
@@ -182,7 +182,7 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
             for x in currentCSet.keys():
                 if(currentCSet[x]>=minSupport):
                     k_LFS.add(x)
-            print "My Local k-frequent itemsets are=\n",k_LFS,len(k_LFS)
+            print "My Local k-frequent itemsets are=\n",len(k_LFS)
 
             clients= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             clients.connect(('10.0.0.21', 8089))
@@ -192,7 +192,7 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
             if data:
                     data=json.loads(data)
                     data=eval(data)
-                    print "received global k-frequent itemsets including star itemsets\n",data,len(data)
+                    print "received global k-frequent itemsets including star itemsets\n",len(data)
             clients.close()
             k_GFS=set()
             for x in data.keys():
@@ -201,7 +201,7 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
 
             #currentLSet = set([ x for x in k_LFS.keys()])
             currentLSet=set.intersection(k_GFS, k_LFS)
-            print "After intersecting local with global received",currentLSet,len(currentLSet)
+            print "After intersecting local with global received",len(currentLSet)
             udpsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
             udpsock.connect(('10.0.0.21',8080))
@@ -217,7 +217,7 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
                 count=count+1
             
             
-                if(count==3):
+                if(count==2):
                     break
             udpsock.close()
 
