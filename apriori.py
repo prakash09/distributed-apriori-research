@@ -179,6 +179,7 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
                             except KeyError:
                                     accurate_star.add(x)        
                                     #data[x]=starResove(x,largeSet,k)
+                    print "items that are calculated accurately =", len(accurate_star)
                     accurateStar=returnItemsWithMinSupport(accurate_star,transactionList,minSupport,freqSet,k)
                     for x in accurateStar.keys():
                         data[x]=accurateStar[x]
