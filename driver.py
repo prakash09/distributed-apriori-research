@@ -122,7 +122,7 @@ def main():
     os.system("pwd")
     os.system("./exe.sh")
     subprocess.call(["cd","/home/prakash","./exe.sh"], shell=True)
-    idpass=[ "mamta@10.0.0.23",  "lalit@10.0.0.22" ]
+    idpass=[  "lalit@10.0.0.22" ]
     #client=ParallelSSHClient(idpass)
     #client.run_command('./exe.sh', sudo=True)
     for i in idpass:
@@ -142,7 +142,7 @@ def socketconnection():
     except:
         print "Connection is already open"
     count=0
-    total_node=3
+    total_node=2
     node=[]
     obj=[]
     while 1:
