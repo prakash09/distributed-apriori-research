@@ -69,7 +69,7 @@ def returnItemsWithMinSupport(itemSet, transactionList, minSupport, freqSet,k):
 
         for item, count in localSet.items():
                 support = float(count)/len(transactionList)
-		_itemSet[item]=support
+                _itemSet[item]=support
         return _itemSet
 
 
@@ -147,16 +147,12 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
             print "joined keys are=", len(currentLSet)
             currentCSet = returnItemsWithMinSupport(currentLSet,transactionList,minSupport,freqSet,k)
             print "k-itemset with frequency are=\n",len(currentCSet)
-     #       prescan=returnItemsWithMinSupport(PreScan,transactionList,minSupport,freqSet,k)#
-    #	print "Previous itemsets need to be scanned are=\n",prescan,len(prescan)
-      #      PreScan=currentLSet# new set which need to be differentiate
+ 
             k_LFS={}
             for x in currentCSet.keys():
                 if(currentCSet[x]>=minSupport):
                     k_LFS[x]=currentCSet[x]
-            #print "My Local k-frequent itemsets are=\n",k_LFS,len(k_LFS)
-            # add prescan with k_LFS to send it to server
-       #     k_LFS=dict(k_LFS.items()+prescan.items())#
+    
             clients= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             clients.connect(('10.0.0.21', 8089))
             oneCSet=json.dumps(str(k_LFS))
@@ -173,9 +169,7 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
                     for x in data.keys():
                             try:
                                     data[x]=currentCSet[x]
-                #if x in currentCSet:
-                # data[x]=currentCSet[x]
-                #else:
+           
                             except KeyError:
                                     accurate_star.add(x)        
                                     #data[x]=starResove(x,largeSet,k)
@@ -202,22 +196,13 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
                     
                     for x in data.keys():
                         k_GFS.add(x)
-            #PreScan= k_GFS.difference(PreScan) #take diffence of received globall set with already scanned data items
-    #	print "extra needed to scan with k+1 itemsets=\n",PreScan,len(PreScan)
-            #if not k_LFS:
-            #   break
+  
             currentLSet = set([ x for x in k_LFS.keys()])
             currentLSet=k_GFS&currentLSet
             print "After intersecting local with global received",len(currentLSet)
             largeSet[k] = currentCSet
             k = k + 1
-        #if (not currentLSet and not PreScan):
-         #   clients= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-          #  clients.connect(('10.0.0.21', 8089))
-           # oneCSet=json.dumps(str(currentLSet))
-            #send_msg(clients, oneCSet)
-         #   clients.close()
-          #  break
+  
         except:
               break
 

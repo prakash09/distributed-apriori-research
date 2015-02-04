@@ -103,7 +103,7 @@ def computation(node, obj,connection_no):
                     if temp2[x]==0 :
                         temp2[x]=temp[connection_no][x] + (data_from_client[i][x])/n
                     else:
-                        temp2[x]+=temp2[x]+(data_from_client[i][x])/n
+                        temp2[x]+=(data_from_client[i][x])/n
                     if temp2[x] >= 0.05:
                             serverdict[x]=temp2[x]
         global_server_dictionary[connection_no]=serverdict
