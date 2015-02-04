@@ -156,7 +156,7 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
         data.append(data1)
         count=count+1
                 
-        if(count==2):
+        if(count==3):
             break
     udpsock.close()
    # print "data from lalit sir", data, len(data)
@@ -169,7 +169,7 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
         try:
             currentLSet=set()
             #currentLSet = joinSet(currentLSet, k)#currentLSet contains joined keys
-            for i in xrange(2):
+            for i in xrange(3):
                 data2 = joinSet(set(data[i]), k)
                 currentLSet=currentLSet.union(data2)
             print "joined keys are=", len(currentLSet)
@@ -178,10 +178,10 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
 
 
 
-            k_LFS=set()
+            k_LFS={}
             for x in currentCSet.keys():
                 if(currentCSet[x]>=minSupport):
-                    k_LFS.add(x)
+                    k_LFS[x]=currentCSet[x]
             print "My Local k-frequent itemsets are=\n",len(k_LFS)
 
             clients= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -200,7 +200,8 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
 
 
             #currentLSet = set([ x for x in k_LFS.keys()])
-            currentLSet=set.intersection(k_GFS, k_LFS)
+            currentLSet=set([x for x in k_LFS.keys()])
+            currentLSet=k_GFS&currentLSet
             print "After intersecting local with global received",len(currentLSet)
             udpsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -217,15 +218,14 @@ def runApriori(data_iter, minSupport, minConfidence): #first line in splitted
                 count=count+1
             
             
-                if(count==2):
+                if(count==3):
                     break
             udpsock.close()
 
         
             largeSet[k] = currentCSet
             k = k + 1
-            if ( not data ):
-                    break
+          
         except:
             break
 
